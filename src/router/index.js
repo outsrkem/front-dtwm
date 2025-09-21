@@ -13,6 +13,7 @@ const Items = () => import("../views/item/index.vue");
 const InWarehouse = () => import("../views/stockin/inwarehouse.vue");
 const OutWarehouse = () => import("../views/stockout/outwarehouse.vue");
 const Supplier = () => import("../views/supplier/index.vue");
+const PrintPage = () => import("../views/printmp/printmp.vue"); // 打印页面
 
 // 动态导入组件（根据设备类型）
 const loadComponent = (pcComponent, mobileComponent) => {
@@ -24,7 +25,8 @@ const MobileLayout = () => import("../mobile/layout/index.vue");
 const MItems = () => import("../mobile/views/item/index.vue");
 const Muser = () => import("../mobile/views/user/index.vue");
 const MStockin = () => import("../mobile/views/stockin/index.vue");
-
+const MStockout = () => import("../mobile/views/stockout/index.vue");
+const MOrder = () => import("../mobile/views/order/index.vue");
 // 路由配置
 const routes = [
     {
@@ -36,7 +38,7 @@ const routes = [
             { meta: { title: "数据统计" }, path: "/overview", name: "overview", component: Overview },
             { meta: { title: "库存信息" }, path: "/inventory", name: "inventory", component: Inventory },
             { meta: { title: "出库管理" }, path: "/stockout", name: "stockout", component: Stockout },
-            { meta: { title: "出库管理 - 出库申请" }, path: "/stockin/delivery", name: "outWarehouse", component: OutWarehouse },
+            { meta: { title: "出库管理 - 出库申请" }, path: "/stockin/delivery", name: "outWarehouse", component: loadComponent(OutWarehouse, MStockout) },
             { meta: { title: "入库管理" }, path: "/stockin", name: "stockin", component: Stockin },
             { meta: { title: "入库管理 - 入库申请" }, path: "/stockin/create", name: "inWarehouse", component: loadComponent(InWarehouse, MStockin) },
             { meta: { title: "出入库明细" }, path: "/particulars", name: "particulars", component: Particulars },
@@ -44,8 +46,10 @@ const routes = [
             { meta: { title: "物品管理" }, path: "/items", name: "items", component: loadComponent(Items, MItems) },
             { meta: { title: "客户管理" }, path: "/supplier", name: "supplier", component: Supplier },
             { meta: { title: "用户中心" }, path: "/user", name: "user", component: Muser },
+            { meta: { title: "单据列表" }, path: "/order", name: "order", component: MOrder },
         ],
     },
+    { meta: { title: "仓库管理系统 - 数据打印" }, path: "/eprint", name: "eprint", component: PrintPage },
     {
         path: "/:pathMatch(.*)*",
         component: NotFound,

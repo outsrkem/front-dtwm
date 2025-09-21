@@ -31,7 +31,7 @@
                 <el-descriptions-item label="订单编号">
                     {{ order.serial }}
                 </el-descriptions-item>
-                <el-descriptions-item label="操作员">{{ order.owner.username }}</el-descriptions-item>
+                <el-descriptions-item label="提交人">{{ order.owner.username }}</el-descriptions-item>
                 <el-descriptions-item label="创建时间">{{ formatDate(order.create_time) }}</el-descriptions-item>
             </el-descriptions>
 

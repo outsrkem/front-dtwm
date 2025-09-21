@@ -23,12 +23,12 @@ export default defineConfig({
         host: "0.0.0.0",
         proxy: {
             "/api": {
-                target: "https://uias.localvm.outsrkem.top:30078",
+                target: "http://182.92.98.233:35860/",
                 changeOrigin: true,
                 // rewrite: (path) => path.replace(/^\/api/, ""),
             },
             "/authui": {
-                target: "https://uias.localvm.outsrkem.top:30078",
+                target: "http://182.92.98.233:35860/",
                 changeOrigin: true,
                 // rewrite: (path) => path.replace(/^\/api/, ""),
             },

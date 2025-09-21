@@ -30,7 +30,7 @@
                 <el-table-column prop="serial" label="业务单据" width="300" />
                 <el-table-column prop="warehouse.name" label="仓库" />
                 <el-table-column prop="classification.name" label="类型" />
-                <el-table-column prop="owner.username" label="操作员" />
+                <el-table-column prop="owner.username" label="提交人" />
                 <el-table-column prop="status" label="状态">
                     <template #default="scope">
                         <!-- 状态标识点 -->
@@ -46,8 +46,11 @@
                 </el-table-column>
                 <el-table-column label="操作" width="200">
                     <template #default="scope">
-                        <el-button link type="primary">打印</el-button>
-                        <el-button link type="primary" @click="onOpenParticulars(scope.row)">处理</el-button>
+                        <el-space>
+                            <el-button link type="primary" @click="onLookParticulars(scope.row)">明细</el-button>
+                            <el-button link type="primary" @click="onPrint(scope.row)">打印</el-button>
+                            <el-button link type="primary" @click="onOpenParticulars(scope.row)">处理</el-button>
+                        </el-space>
                     </template>
                 </el-table-column>
             </el-table>
@@ -68,6 +71,7 @@ import { Refresh, Search } from "@element-plus/icons-vue";
 import InWarehouse from "./inwarehouse.vue";
 import InStatus from "./status.vue";
 import pagination from "../../components/pagination/pagination.vue";
+import PrintPage from "../printmp/printmp.vue";
 import { formatTime } from "../../utils/date.js";
 import { Getstockorder } from "../../api/index.js";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
@@ -75,7 +79,7 @@ import { getStatusConfig } from "../../utils/status.js";
 import { getSuatusOption } from "../../utils/status.js";
 export default {
     name: "HomeIndex",
-    components: { pagination, InWarehouse, InStatus },
+    components: { pagination, InWarehouse, InStatus, PrintPage },
     props: {},
     setup() {
         return {
@@ -147,6 +151,12 @@ export default {
             this.query.loading = true;
             this.page = 1;
             this.loadGetstockorder(this.pageSize, this.page);
+        },
+        onPrint(val) {
+            this.$router.push({ name: "eprint", query: { id: val.order_id } });
+        },
+        onLookParticulars(val) {
+            this.$router.push({ name: "particulars", query: { serial: val.serial } });
         },
     },
     created() {

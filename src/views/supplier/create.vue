@@ -13,8 +13,8 @@
                             </el-form-item>
                         </el-col>
                         <el-col :span="12">
-                            <el-form-item label="供应商名称" prop="name">
-                                <el-input v-model="supplier.name" show-word-limit max="100" placeholder="输入供应商全称" clearable />
+                            <el-form-item label="供应商/领用（单位/人）名称" prop="name">
+                                <el-input v-model="supplier.name" show-word-limit max="100" placeholder="请输入输入全称" clearable />
                             </el-form-item>
                         </el-col>
                     </el-row>

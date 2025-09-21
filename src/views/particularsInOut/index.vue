@@ -44,7 +44,6 @@
                 <el-table-column label="业务单据" min-width="100px">
                     <template #default="scope">
                         {{ scope.row.order.serial }}
-                        <!-- <el-button type="text" size="small">{{ scope.row.order_no }}</el-button> -->
                     </template>
                 </el-table-column>
                 <el-table-column prop="warehouse.name" label="仓库" />
@@ -53,6 +52,10 @@
                         {{ scope.row.order.type === "IN" ? "入库" : scope.row.order.type === "OUT" ? "出库" : scope.row.order.type }}
                     </template>
                 </el-table-column>
+
+                <el-table-column prop="item.name" label="物品名称" min-width="100" />
+                <el-table-column prop="detailedly.quantity" label="出入库数量" width="120" />
+                <el-table-column prop="item.unit" label="单位" width="150" />
                 <el-table-column prop="status" label="状态" width="100">
                     <template #default="scope">
                         <span
@@ -64,10 +67,7 @@
                         </span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="item.name" label="物品名称" min-width="100" />
-                <el-table-column prop="detailedly.quantity" label="出入库数量" width="120" />
-                <el-table-column prop="item.unit" label="单位" width="150" />
-                <el-table-column prop="create_time" label="发生日期" width="160">
+                <el-table-column prop="create_time" label="提交时间" width="260">
                     <template #default="scope">{{ formatDate(scope.row.detailedly.create_time) }}</template>
                 </el-table-column>
             </el-table>
@@ -111,7 +111,7 @@ export default {
             particularsdata: [],
             query: {
                 statusOptions: getSuatusOption(), // 引入状态选项
-                status: "Completed",
+                status: "",
                 serial: "",
                 warehouses: {
                     id: "",
@@ -125,7 +125,7 @@ export default {
     methods: {
         getStatusConfig,
         formatDate(time) {
-            return dayjs(time).format("YYYY-MM-DD");
+            return dayjs(time).format("YYYY-MM-DD HH:mm:ss");
         },
         loadGetParticulars: function (page_size = 10, page = 1) {
             this.loading = true;
@@ -210,12 +210,15 @@ export default {
         },
     },
     created() {
-        this.$globalBus.emit("updateActivePath", "/particulars");
+        this.query.serial = this.$route.query.serial;
         this.onRefresh();
         this.loadGetWarehouses();
         this.$globalBus.on("onRefresh", () => {
             this.onRefresh();
         });
+    },
+    mounted() {
+        this.$globalBus.emit("updateActivePath", "/particulars");
     },
     beforeUnmount() {
         this.$globalBus.off("onRefresh");

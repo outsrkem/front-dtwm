@@ -61,6 +61,7 @@ export const GetClassification = (params) => ajax(`${baseURL}/v1/classification`
 export const ReviewFlow = (data) => ajax(`${baseURL}/v1/electronic-flow/review`, "POST", null, data);
 export const GetOrderDetails = (paths) => ajax(`${baseURL}/v1/stock/order/${paths.order_id}`, "GET", null, null);
 export const SelectInventory = (params) => ajax(`${baseURL}/v1/inventory`, "GET", params, null);
+export const SelectStockOrder = (params) => ajax(`${baseURL}//v1/stockorder`, "GET", params, null);
 
 // h.POST("/v1/supplier", supplier.CreateSupplier())               // 创建供应商 √
 // h.GET("/v1/supplier/:id", supplier.GetSupplierByID())           // 根据ID获取供应商详情 √

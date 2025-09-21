@@ -1,19 +1,9 @@
 <template>
-    <div class="admin-layout">
-        <div class="admin-main">
-            <main class="admin-content">
+    <div>
+        <div>
+            <main>
                 <router-view />
             </main>
-            <!-- <div>
-                <div>
-                    <van-tabbar v-model="active">
-                        <van-tabbar-item icon="home-o" @click="OnSwitchRoutes('/')">首页</van-tabbar-item>
-                        <van-tabbar-item icon="shop-o" @click="OnSwitchRoutes('/items')">物品</van-tabbar-item>
-                        <van-tabbar-item icon="points">仓库</van-tabbar-item>
-                        <van-tabbar-item icon="manager-o" @click="OnSwitchRoutes('/user')">我的</van-tabbar-item>
-                    </van-tabbar>
-                </div>
-            </div> -->
         </div>
     </div>
 </template>
@@ -37,8 +27,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.admin-content {
-    padding: 12px;
-}
-</style>
+<style scoped></style>

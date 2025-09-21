@@ -13,15 +13,15 @@
             <div class="card">
                 <div class="stats">
                     <div class="stat-item">
-                        <div class="stat-value">128</div>
+                        <div class="stat-value">--</div>
                         <div class="stat-label">今日入库</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">76</div>
+                        <div class="stat-value">--</div>
                         <div class="stat-label">今日出库</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">12</div>
+                        <div class="stat-value">--</div>
                         <div class="stat-label">待处理</div>
                     </div>
                 </div>
@@ -43,13 +43,25 @@
                     </div>
                 </div>
 
-                <div class="operation-item">
+                <div class="operation-item" @click="onOutStock">
                     <div class="operation-icon out-icon">
                         <i class="fas fa-arrow-up"></i>
                     </div>
                     <div class="operation-content">
                         <div class="operation-name">开始出库</div>
                         <div class="operation-desc">处理出库请求</div>
+                    </div>
+                    <div class="arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="operation-item" @click="onToOrder">
+                    <div class="operation-icon transfer-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="operation-content">
+                        <div class="operation-name">单据列表</div>
+                        <div class="operation-desc">查询出入库单据</div>
                     </div>
                     <div class="arrow">
                         <i class="fas fa-chevron-right"></i>
@@ -79,6 +91,12 @@ export default {
         onInStock() {
             this.$router.push({ name: "inWarehouse" });
         },
+        onOutStock() {
+            this.$router.push({ name: "outWarehouse" });
+        },
+        onToOrder() {
+            this.$router.push({ name: "order" });
+        },
     },
     created() {},
 };
@@ -89,19 +107,8 @@ export default {
     background-color: blueviolet;
 }
 .index-container {
-    /* height: 100%; */
-    /* background-color: #fbfbfb; */
+    margin: 10px;
 }
-
-/* 
- */
-
-/* * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-} */
 
 body {
     background-color: #f5f7fa;

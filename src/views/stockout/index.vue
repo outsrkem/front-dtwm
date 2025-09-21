@@ -30,7 +30,7 @@
                 <el-table-column prop="serial" label="业务单据" width="300" />
                 <el-table-column prop="warehouse.name" label="仓库" />
                 <el-table-column prop="classification.name" label="类型" />
-                <el-table-column prop="owner.username" label="操作员" />
+                <el-table-column prop="owner.username" label="提交人" />
                 <el-table-column prop="status" label="状态">
                     <template #default="scope">
                         <span class="status-dot" :class="getStatusConfig(scope.row.status).class" :title="getStatusConfig(scope.row.status).label"></span>
@@ -44,8 +44,11 @@
                 </el-table-column>
                 <el-table-column label="操作" width="200">
                     <template #default="scope">
-                        <el-button link type="primary">查看明细</el-button>
-                        <el-button link type="primary" @click="onOpenDealWith(scope.row)">处理</el-button>
+                        <el-space>
+                            <el-button link type="primary" @click="onLookParticulars(scope.row)">明细</el-button>
+                            <el-button link type="primary" @click="onPrint(scope.row)">打印</el-button>
+                            <el-button link type="primary" @click="onOpenDealWith(scope.row)">处理</el-button>
+                        </el-space>
                     </template>
                 </el-table-column>
             </el-table>
@@ -143,6 +146,12 @@ export default {
         onSearch() {
             this.query.loading = true;
             this.loadGetstockorder(this.pageSize, this.page);
+        },
+        onPrint(val) {
+            this.$router.push({ name: "eprint", query: { id: val.order_id } });
+        },
+        onLookParticulars(val) {
+            this.$router.push({ name: "particulars", query: { serial: val.serial } });
         },
     },
     created() {
