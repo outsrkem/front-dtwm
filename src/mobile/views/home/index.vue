@@ -1,5 +1,5 @@
 <template>
-    <div class="index-container" style="padding: 18px">
+    <div class="index-container">
         <!-- <van-nav-bar title="仓库管理系统" right-text="控制台" @click-left="toConsole" /> -->
         <div class="header">
             <h1>仓库管理系统</h1>
@@ -7,7 +7,7 @@
                 <i class="fas fa-bell"></i>
                 <i class="fas fa-user-circle"></i>
             </div>
-            <van-button plain round type="warning" @click="onConsole">控制台</van-button>
+            <van-button plain round type="warning" size="small" @click="onConsole">控制台</van-button>
         </div>
         <div>
             <div class="card">
@@ -30,7 +30,7 @@
             <div class="card operation-card">
                 <div class="card-title"><i class="fas fa-cube"></i>仓库操作</div>
 
-                <div class="operation-item">
+                <div class="operation-item" @click="onInStock">
                     <div class="operation-icon in-icon">
                         <i class="fas fa-arrow-down"></i>
                     </div>
@@ -75,6 +75,9 @@ export default {
     methods: {
         onConsole() {
             toConsole();
+        },
+        onInStock() {
+            this.$router.push({ name: "inWarehouse" });
         },
     },
     created() {},

@@ -4,7 +4,7 @@
             <template #header>
                 <div class="my_refresh">
                     <div>
-                        <span>入库管理</span>
+                        <span>出库管理</span>
                         <span style="padding-left: 5px; padding-right: 5px"></span>
                     </div>
                     <div>
@@ -102,7 +102,7 @@ export default {
         },
         loadGetstockorder: function (page_size, page) {
             this.loading = true;
-            let params = { k: "out", ...convertToLimitOffset(page, page_size) };
+            let params = { direction: "out", ...convertToLimitOffset(page, page_size) };
             if (this.query.serial !== "") {
                 params = { serial: this.query.serial, ...params };
             }

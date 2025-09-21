@@ -23,6 +23,8 @@ const MobileHome = () => import("../mobile/views/home/index.vue");
 const MobileLayout = () => import("../mobile/layout/index.vue");
 const MItems = () => import("../mobile/views/item/index.vue");
 const Muser = () => import("../mobile/views/user/index.vue");
+const MStockin = () => import("../mobile/views/stockin/index.vue");
+
 // 路由配置
 const routes = [
     {
@@ -36,7 +38,7 @@ const routes = [
             { meta: { title: "出库管理" }, path: "/stockout", name: "stockout", component: Stockout },
             { meta: { title: "出库管理 - 出库申请" }, path: "/stockin/delivery", name: "outWarehouse", component: OutWarehouse },
             { meta: { title: "入库管理" }, path: "/stockin", name: "stockin", component: Stockin },
-            { meta: { title: "入库管理 - 入库申请" }, path: "/stockin/create", name: "inWarehouse", component: InWarehouse },
+            { meta: { title: "入库管理 - 入库申请" }, path: "/stockin/create", name: "inWarehouse", component: loadComponent(InWarehouse, MStockin) },
             { meta: { title: "出入库明细" }, path: "/particulars", name: "particulars", component: Particulars },
             { meta: { title: "仓库信息" }, path: "/warehouse", name: "warehouse", component: Warehouse },
             { meta: { title: "物品管理" }, path: "/items", name: "items", component: loadComponent(Items, MItems) },

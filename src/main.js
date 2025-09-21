@@ -24,15 +24,15 @@ app.use(ElementPlus, {
 app.use(router);
 app.use(EventBusPlugin);
 app.use(vueCookies);
-// 全局修改默认配置，点击空白处不能关闭弹窗
+
+// 全局修改 ElDialog 默认配置（点击空白/ESC 不关闭弹窗）
 app._context.components.ElDialog["props"].closeOnClickModal.default = false;
-// 全局修改默认配置，按下ESC不能关闭弹窗
 app._context.components.ElDialog["props"].closeOnPressEscape.default = false;
 
-// 引入手机端
-import Vant from "vant";
-import "vant/lib/index.css";
-app.use(Vant);
+// 👇 删除这两行全局引入 Vant 的代码（按需引入已自动处理）
+// import Vant from "vant";
+// import "vant/lib/index.css";
+// app.use(Vant);
 
 // 挂载app
 app.mount("#app");

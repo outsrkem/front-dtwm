@@ -37,4 +37,8 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.admin-content {
+    padding: 12px;
+}
+</style>

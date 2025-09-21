@@ -106,7 +106,7 @@ export default {
         },
         loadGetstockorder: function (page_size = 10, page = 1) {
             this.loading = true;
-            let params = { k: "in", ...convertToLimitOffset(page, page_size) };
+            let params = { direction: "in", ...convertToLimitOffset(page, page_size) };
             if (this.query.serial !== "") {
                 params = { serial: this.query.serial, ...params };
             }
@@ -150,6 +150,7 @@ export default {
         },
     },
     created() {
+        this.$globalBus.emit("updateActivePath", "/stockin");
         this.onRefresh();
         this.$globalBus.on("onRefresh", () => {
             this.onRefresh();
