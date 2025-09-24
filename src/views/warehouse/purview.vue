@@ -8,6 +8,7 @@
                         <el-select
                             v-model="form.responsible"
                             multiple
+                            filterable
                             placeholder="请选择责任人"
                             @change="handlePermissionChange('RESPONSIBLE', 'responsible')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
@@ -16,29 +17,38 @@
 
                     <!-- 管理员 -->
                     <el-form-item label="管理员：">
-                        <el-select v-model="form.manager" multiple placeholder="请选择管理员" @change="handlePermissionChange('MANAGER', 'manager')">
+                        <el-select v-model="form.manager" multiple filterable placeholder="请选择管理员" @change="handlePermissionChange('MANAGER', 'manager')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
                     </el-form-item>
 
                     <!-- 审批卡点 -->
                     <el-form-item label="审批卡点：">
-                        <el-select v-model="form.approver" multiple placeholder="请选择审批人" @change="handlePermissionChange('APPROVER', 'approver')">
+                        <el-select
+                            v-model="form.approver"
+                            multiple
+                            filterable
+                            placeholder="请选择审批人"
+                            @change="handlePermissionChange('APPROVER', 'approver')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
                     </el-form-item>
 
                     <!-- 出入库卡点 -->
                     <el-form-item label="出入库卡点：">
-                        <el-select v-model="form.executor" multiple placeholder="请选择执行人" @change="handlePermissionChange('EXECUTOR', 'executor')">
+                        <el-select
+                            v-model="form.executor"
+                            multiple
+                            filterable
+                            placeholder="请选择执行人"
+                            @change="handlePermissionChange('EXECUTOR', 'executor')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
                     </el-form-item>
                 </el-form>
             </div>
             <template #footer>
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="dialogVisible = false">确定</el-button>
+                <el-button bg text style="width: 120px" @click="dialogVisible = false">关闭</el-button>
             </template>
         </el-dialog>
     </div>
@@ -75,7 +85,6 @@ export default {
     },
     methods: {
         openDialog(val) {
-            console.log(val);
             this.warehouse_id = val.id;
             this.loadListPermission();
             this.dialogVisible = true;
@@ -91,7 +100,6 @@ export default {
             withDelay(() => ListPermission(paths))
                 .then((res) => {
                     if (res?.metadata?.ecode !== "DTWM.0000" || !res?.payload?.items) {
-                        console.error("权限列表获取失败", res);
                         return;
                     }
 
@@ -176,13 +184,9 @@ export default {
                 user_id: userId,
             };
 
-            AddPermission(paths, data)
+            withDelay(() => AddPermission(paths, data))
                 .then((res) => {
-                    if (res?.metadata?.ecode !== "DTWM.0000") {
-                        console.error(`添加${role}权限失败`, res);
-                        // 失败时回滚选择
-                        this.revertPermissionChange(role, userId, "add");
-                    }
+                    this.$message.success(msgcon("添加成功"));
                 })
                 .catch((err) => {
                     console.error(`添加${role}权限异常`, err);
@@ -200,11 +204,7 @@ export default {
 
             DeletePermission(paths, data)
                 .then((res) => {
-                    if (res?.metadata?.ecode !== "DTWM.0000") {
-                        console.error(`删除${role}权限失败`, res);
-                        // 失败时回滚选择
-                        this.revertPermissionChange(role, userId, "delete");
-                    }
+                    this.$message.success(msgcon("移除成功"));
                 })
                 .catch((err) => {
                     console.error(`删除${role}权限异常`, err);

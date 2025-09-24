@@ -1,57 +1,91 @@
 <template>
-    <el-dialog v-model="dialogVisible" width="1200" title="处理处理">
-        <div style="display: flex" v-if="!loading">
-            <!-- 操作按钮区域 -->
-            <el-steps style="width: 600px" :active="currentStep" finish-status="success" align-center>
-                <!-- 始终显示提交步骤 -->
-                <el-step title="提交" />
+    <el-dialog v-model="dialogVisible" width="1200" title="处理订单">
+        <div v-if="!loading">
+            <!-- 步骤流程区域 -->
+            <el-steps :active="currentStep" finish-status="success" align-center style="margin-bottom: 30px">
+                <!-- 提交步骤 -->
+                <el-step>
+                    <template #title>提交</template>
+                    <template #description>
+                        <div v-if="order.status === 'DRAFT'">
+                            <el-button plain size="small" type="primary" @click="handleOperation({ action: 'submit', text: '提交' })"> 提交 </el-button>
+                            <el-button plain size="small" type="warning" @click="handleOperation({ action: 'cancel', text: '撤销' })"> 撤销 </el-button>
+                        </div>
+                        <div v-else>
+                            {{ order.status === "CANCELLED" ? "已撤销" : "已提交" }}
+                        </div>
+                    </template>
+                </el-step>
 
-                <!-- 非取消状态显示审核和入库步骤 -->
-                <template v-if="order.status !== 'CANCELLED' && order.status !== 'REJECTED'">
-                    <el-step title="确认" />
-                    <el-step title="入库" />
-                </template>
+                <!-- 确认步骤 (非取消/拒绝状态显示) -->
+                <el-step v-if="order.status !== 'CANCELLED' && order.status !== 'REJECTED'">
+                    <template #title>确认</template>
+                    <template #description>
+                        <div v-if="order.status === 'PENDING'">
+                            <el-button plain size="small" type="success" @click="handleOperation({ action: 'approve', text: '确认' })"> 确认 </el-button>
+                            <el-button plain size="small" type="danger" @click="handleOperation({ action: 'cancel', text: '撤销' })"> 撤销 </el-button>
+                        </div>
+                        <div v-else-if="order.status === 'APPROVED'">已确认</div>
+                        <div v-else-if="order.status === 'REJECTED'">已拒绝</div>
+                        <div v-else>-</div>
+                    </template>
+                </el-step>
 
-                <!-- 结束/完成步骤 -->
-                <el-step :title="order.status !== 'CANCELLED' && order.status !== 'REJECTED' ? '完成' : '结束'" />
+                <!-- 入库步骤 (非取消/拒绝状态显示) -->
+                <el-step v-if="order.status !== 'CANCELLED' && order.status !== 'REJECTED'">
+                    <template #title>入库</template>
+                    <template #description>
+                        <div v-if="order.status === 'APPROVED'">
+                            <el-button plain size="small" type="warning" @click="handleOperation({ action: 'execute', text: '入库' })"> 入库 </el-button>
+                        </div>
+                        <div v-else-if="order.status === 'EXECUTED'">已入库</div>
+                        <div v-else>-</div>
+                    </template>
+                </el-step>
+
+                <!-- 完成/结束步骤 -->
+                <el-step>
+                    <template #title>
+                        {{ order.status !== "CANCELLED" && order.status !== "REJECTED" ? "完成" : "结束" }}
+                    </template>
+                    <template #description>
+                        <div v-if="order.status === 'EXECUTED' && !isCurrentSessionExecuted">
+                            <el-button plain size="small" type="success" @click="handleOperation({ action: 'complete', text: '完成' })"> 完成 </el-button>
+                        </div>
+                        <div v-else>
+                            {{ statusText }}
+                        </div>
+                    </template>
+                </el-step>
             </el-steps>
 
-            <div class="operation-buttons" v-if="hasOperations">
-                <el-button v-for="op in currentOperations" :key="op.action" :type="op.type" @click="handleOperation(op)">
-                    {{ op.text }}
-                </el-button>
-            </div>
-        </div>
+            <!-- 订单详情区域 -->
+            <div style="margin: 12px 0">
+                <el-descriptions border>
+                    <el-descriptions-item label="仓库">{{ order.warehouse?.name || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="仓库地址">{{ order.warehouse?.location || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="入库类型">{{ order.classification?.name || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="订单编号">{{ order.serial || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="提交人">{{ order.owner?.username || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="创建时间">{{ formatDate(order.create_time) }}</el-descriptions-item>
+                </el-descriptions>
 
-        <div style="margin: 12px 0 12px 0">
-            <el-descriptions border>
-                <el-descriptions-item label="仓库">{{ order.warehouse.name }}</el-descriptions-item>
-                <el-descriptions-item label="仓库地址">{{ order.warehouse.location }}</el-descriptions-item>
-                <el-descriptions-item label="入库类型">{{ order.classification.name }}</el-descriptions-item>
-                <el-descriptions-item label="订单编号">
-                    {{ order.serial }}
-                </el-descriptions-item>
-                <el-descriptions-item label="提交人">{{ order.owner.username }}</el-descriptions-item>
-                <el-descriptions-item label="创建时间">{{ formatDate(order.create_time) }}</el-descriptions-item>
-            </el-descriptions>
-
-            <div>
                 <el-divider content-position="left">订单详情</el-divider>
-            </div>
 
-            <div class="scrollable-div">
-                <el-table :data="OrderDetails" v-loading="loading">
-                    <el-table-column prop="item.sku" label="物品编码" show-overflow-tooltip />
-                    <el-table-column prop="item.name" label="名称" />
-                    <el-table-column prop="item.property" label="属性" />
-                    <el-table-column prop="item.specification" label="规格" />
-                    <el-table-column prop="item.unit" label="单位" />
-                    <el-table-column prop="detailedly.quantity" label="入库数目" />
-                </el-table>
-            </div>
+                <div class="scrollable-div">
+                    <el-table :data="OrderDetails" v-loading="loading">
+                        <el-table-column prop="item.sku" label="物品编码" show-overflow-tooltip />
+                        <el-table-column prop="item.name" label="名称" />
+                        <el-table-column prop="item.property" label="属性" />
+                        <el-table-column prop="item.specification" label="规格" />
+                        <el-table-column prop="item.unit" label="单位" />
+                        <el-table-column prop="detailedly.quantity" label="入库数目" />
+                    </el-table>
+                </div>
 
-            <div class="pagination">
-                <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
+                <div class="pagination">
+                    <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
+                </div>
             </div>
         </div>
     </el-dialog>
@@ -77,71 +111,30 @@ export default {
             page: 1,
             OrderDetails: [], // 单据流水列表
             order: {
-                warehouse: {
-                    id: "",
-                    name: "",
-                    location: "",
-                },
-                classification: {
-                    id: null,
-                    name: "",
-                    order_id: "",
-                    order_no: "",
-                    status: "",
-                    update_time: "",
-                    create_time: "",
-                },
-                owner: { username: "" },
-            }, // 单据
+                warehouse: {},
+                classification: {},
+                owner: {},
+            }, // 订单信息
             loading: true,
-            // 新增：标记是否是当前会话中执行的入库操作
-            isCurrentSessionExecuted: false,
-            // 操作配置：根据状态定义可执行的操作
-            operations: {
-                DRAFT: [
-                    { action: "submit", text: "提交", type: "primary" },
-                    { action: "cancel", text: "撤销", type: "warning" },
-                ],
-                PENDING: [
-                    { action: "approve", text: "确认", type: "success" },
-                    { action: "cancel", text: "撤销", type: "warning" },
-                ],
-                APPROVED: [{ action: "execute", text: "入库", type: "primary" }],
-                EXECUTED: [{ action: "complete", text: "完成", type: "primary" }],
-                COMPLETED: [],
-                CANCELLED: [], // 取消状态下没有操作按钮
-                REJECTED: [], // 取消状态下没有操作按钮
-            },
+            isCurrentSessionExecuted: false, // 标记当前会话是否执行过入库操作
         };
     },
     computed: {
-        currentOperations() {
-            if (!this.order || !this.order.status) return [];
-
-            // 关键逻辑：如果是当前会话中执行的入库操作，即使状态是EXECUTED也不显示完成按钮
-            if (this.order.status === "EXECUTED" && this.isCurrentSessionExecuted) {
-                return [];
-            }
-
-            return this.operations[this.order.status] || [];
-        },
-        hasOperations() {
-            return this.currentOperations.length > 0;
-        },
         currentStep() {
-            // 取消状态下只有两个步骤，设置currentStep为2以高亮"结束"步骤
+            // 取消或拒绝状态下高亮最后一步
             if (this.order.status === "CANCELLED" || this.order.status === "REJECTED") {
                 return 3;
             }
 
+            // 正常流程步骤映射
             const statusMap = {
-                DRAFT: 1, // 草稿状态对应第一步"提交"
-                PENDING: 1, // 待审核对应第二步"审核"
-                APPROVED: 2, // 已审核对应第三步"入库"
-                EXECUTED: 3, // 执行中仍属于入库步骤
-                COMPLETED: 4, // 已完成对应第四步"完成"
+                DRAFT: 0, // 草稿在第一步
+                PENDING: 1, // 待审核在第二步
+                APPROVED: 2, // 已审核在第三步
+                EXECUTED: 3, // 已入库在第四步
+                COMPLETED: 3, // 已完成在第四步
             };
-            return statusMap[this.order.status] || 1;
+            return statusMap[this.order.status] || 0;
         },
         statusText() {
             const statusMap = {
@@ -151,6 +144,7 @@ export default {
                 EXECUTED: "执行中",
                 COMPLETED: "已完成",
                 CANCELLED: "已取消",
+                REJECTED: "已拒绝",
             };
             return statusMap[this.order.status] || this.order.status;
         },
@@ -168,9 +162,12 @@ export default {
         },
     },
     methods: {
+        // 格式化日期时间
         formatDate(time) {
-            return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
+            return time ? formatTime(time).format("YYYY-MM-DD HH:mm:ss") : "-";
         },
+
+        // 分页相关方法
         onCurrentChange(p) {
             this.page = p;
             this.loadOrderDetails(this.pageSize, p);
@@ -180,10 +177,12 @@ export default {
             this.page = 1;
             this.loadOrderDetails(s, 1);
         },
+
+        // 处理操作按钮点击
         handleOperation(operation) {
             this.$confirm(`确定要${operation.text}吗？`)
                 .then(() => {
-                    // 如果是入库操作，标记为当前会话执行
+                    // 记录当前会话执行的入库操作
                     if (operation.action === "execute") {
                         this.isCurrentSessionExecuted = true;
                     }
@@ -193,6 +192,8 @@ export default {
                     this.$message.info("已取消操作");
                 });
         },
+
+        // 执行具体操作
         executeOperation(action) {
             if (!this.vdata || !this.vdata.order_id) {
                 this.$message.error("缺少订单信息");
@@ -214,10 +215,11 @@ export default {
                 })
                 .catch((err) => {
                     this.loading = false;
-                    this.$message.error(`操作失败：${err.message || "未知错误"}`);
+                    this.$message.error(`操作失败：${err.data.metadata.message}`);
                 });
         },
-        // 加载出入库流水
+
+        // 加载订单流水详情
         loadOrderDetails(page_size = 10, page = 1) {
             this.loading = true;
             const params = { oid: this.vdata.order_id, ...convertToLimitOffset(page, page_size) };
@@ -233,21 +235,30 @@ export default {
                     this.loading = false;
                 });
         },
-        // 加载订单详情
-        loadGetOrderDetails: function () {
+
+        // 加载订单基本信息
+        loadGetOrderDetails() {
             const paths = { order_id: this.vdata.order_id };
-            withDelay(() => GetOrderDetails(paths)).then((res) => {
-                this.order = res.payload;
-            });
+            withDelay(() => GetOrderDetails(paths))
+                .then((res) => {
+                    this.order = res.payload || {};
+                    this.loading = false;
+                })
+                .catch(() => {
+                    this.loading = false;
+                });
         },
+
+        // 打开对话框
         openDialog() {
-            // 每次打开对话框重置标记
-            this.isCurrentSessionExecuted = false;
+            this.isCurrentSessionExecuted = false; // 重置标记
             this.dialogVisible = true;
             if (this.vdata && this.vdata.order_id) {
                 this.loadOrderDetails();
             }
         },
+
+        // 关闭对话框
         closeDialog() {
             this.dialogVisible = false;
         },
@@ -255,20 +266,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.operation-buttons {
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.operation-buttons .el-button {
-    margin-right: 8px;
-    margin-bottom: 8px;
-}
-
-.scrollable-div {
-    height: 450px;
-    overflow-y: auto;
-}
-</style>
+<style scoped></style>
