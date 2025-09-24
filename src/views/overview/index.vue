@@ -142,10 +142,8 @@ export default {
                     this.stock = res.payload?.items || [];
                     this.updateChart();
                 })
-                .catch((err) => {
-                    const msg = err.data?.metadata?.message || "列表加载失败";
+                .catch(() => {
                     if (!this._isDestroyed) {
-                        this.$message.error(msg);
                         this.stock = [];
                         this.updateChart();
                     }

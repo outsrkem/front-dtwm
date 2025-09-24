@@ -86,6 +86,7 @@ export default {
     methods: {
         openDialog(val) {
             this.warehouse_id = val.id;
+            this.loadListUser();
             this.loadListPermission();
             this.dialogVisible = true;
         },
@@ -239,9 +240,7 @@ export default {
             this.initialForm[formKey] = [...this.form[formKey]];
         },
     },
-    created() {
-        this.loadListUser();
-    },
+    created() {},
 };
 </script>
 
