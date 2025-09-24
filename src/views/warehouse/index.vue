@@ -26,6 +26,7 @@
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button link type="primary">编辑</el-button>
+                        <el-button link type="primary" @click="onPurview(scope.row)">授权</el-button>
                         <el-button link type="danger" @click="onDeleteWarehouse(scope.row)">删除</el-button>
                     </template>
                 </el-table-column>
@@ -36,19 +37,22 @@
         </el-card>
         <CreateWarehouse ref="CreateWarehouse" />
         <DeleteWarehouses ref="DeleteWarehouses" :vdata="deletearray" />
+        <Purview ref="Purview" />
     </div>
 </template>
 
 <script>
 import CreateWarehouse from "./create.vue";
 import DeleteWarehouses from "./delete.vue";
+import Purview from "./purview.vue";
 import pagination from "../../components/pagination/pagination.vue";
 import { Refresh } from "@element-plus/icons-vue";
 import { formatTime } from "../../utils/date.js";
 import { GetWarehouses } from "../../api/index.js";
+import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 export default {
     name: "HomeIndex",
-    components: { pagination, CreateWarehouse, DeleteWarehouses },
+    components: { pagination, CreateWarehouse, DeleteWarehouses, Purview },
     props: {},
     setup() {
         return {
@@ -79,18 +83,20 @@ export default {
             this.loadGetWarehouses(s, 1);
         },
         loadGetWarehouses: function (page_size, page) {
-            const params = { page_size: page_size, page: page };
-            GetWarehouses(params).then((res) => {
-                this.items = res.payload.items;
-                this.pageTotal = res.payload.page_info.total;
-                this.loading = false;
-            });
+            this.loading = true;
+            const params = convertToLimitOffset(page, page_size);
+            withDelay(() => GetWarehouses(params))
+                .then((res) => {
+                    this.items = res.payload.items;
+                    this.pageTotal = res.payload.page_info.total;
+                })
+                .finally(() => {
+                    this.loading = false;
+                });
         },
         onRefresh() {
             this.loading = true;
-            setTimeout(() => {
-                this.loadGetWarehouses(this.pageSize, this.page);
-            }, this.$config.delayTime);
+            this.loadGetWarehouses(this.pageSize, this.page);
         },
         onCreateWarehouse() {
             this.$refs.CreateWarehouse.openDialog();
@@ -99,6 +105,9 @@ export default {
             this.deletearray = [];
             this.deletearray.push(val);
             this.$refs.DeleteWarehouses.openDialog();
+        },
+        onPurview(val) {
+            this.$refs.Purview.openDialog(val);
         },
     },
     created() {

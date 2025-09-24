@@ -84,3 +84,13 @@ export const EnableSupplier = (paths) => ajax(`${baseURL}/v1/supplier/${paths.id
 
 // h.GET("/v1/overview/stock", apc("dtwm:overview:listPreview"), overview.StockEarly()) // 数据统计
 export const StockEarly = (params) => ajax(`${baseURL}/v1/overview/stock`, "GET", params, null);
+
+// h.GET("/v1/user", apc("dtwm:user:list"), core.ListUser()); // 获取用户列表,搜索用户
+// h.GET("/v1/checkpoint/control/:warehouseId", pointctl.ListPermission());
+// h.POST("/v1/checkpoint/control/:warehouseId", pointctl.AddPermission());
+// h.DELETE("/v1/checkpoint/control/:warehouseId", pointctl.DeletePermission());
+
+export const ListUser = (params) => ajax(`${baseURL}/v1/user`, "GET", params, null);
+export const ListPermission = (paths) => ajax(`${baseURL}/v1/checkpoint/control/${paths.warehouse_id}`, "GET", null, null);
+export const AddPermission = (paths, data) => ajax(`${baseURL}/v1/checkpoint/control/${paths.warehouse_id}`, "POST", null, data);
+export const DeletePermission = (paths, data) => ajax(`${baseURL}/v1/checkpoint/control/${paths.warehouse_id}`, "DELETE", null, data);
