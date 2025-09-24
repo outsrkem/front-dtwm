@@ -14,7 +14,6 @@
                 </div>
             </template>
             <el-table :data="items" v-loading="loading">
-                <el-table-column prop="id" label="仓库ID" width="330" />
                 <el-table-column prop="name" label="仓库名称" />
                 <el-table-column prop="location" label="仓库地址" />
                 <el-table-column prop="update_time" label="更新时间" width="200">

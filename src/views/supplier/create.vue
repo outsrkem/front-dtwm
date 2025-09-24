@@ -8,8 +8,8 @@
                 <el-form :model="supplier" :rules="formRules" ref="supplierForm" label-width="120px" label-position="top" :disabled="loading">
                     <el-row :gutter="20">
                         <el-col :span="12">
-                            <el-form-item label="供应商编码" prop="code">
-                                <el-input v-model="supplier.code" placeholder="建议格式：SP2024001（唯一不重复）" clearable />
+                            <el-form-item label="供应商/领用（单位/人）编码" prop="code">
+                                <el-input v-model="supplier.code" placeholder="唯一不重复" clearable />
                             </el-form-item>
                         </el-col>
                         <el-col :span="12">

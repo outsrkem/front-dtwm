@@ -9,7 +9,7 @@
                     <el-row :gutter="20">
                         <el-col :span="12">
                             <el-form-item label="产品编码" prop="sku">
-                                <el-input v-model="item.sku" placeholder="建议使用包含物品特征的编码，如:水桶-10L-红褐色-001" clearable />
+                                <el-input v-model="item.sku" placeholder="唯一不重复，建议使用物品条码" clearable />
                             </el-form-item>
                         </el-col>
                         <el-col :span="12">

@@ -1,6 +1,5 @@
 <template>
     <div class="index-container">
-        <!-- <van-nav-bar title="仓库管理系统" right-text="控制台" @click-left="toConsole" /> -->
         <div class="header">
             <h1>仓库管理系统</h1>
             <div class="icons">
@@ -95,7 +94,7 @@ export default {
             this.$router.push({ name: "outWarehouse" });
         },
         onToOrder() {
-            this.$router.push({ name: "order" });
+            this.$router.push({ name: "StockOrderList" });
         },
     },
     created() {},

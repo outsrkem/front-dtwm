@@ -2,7 +2,7 @@
     <div style="margin: 10px">
         <van-nav-bar title="新增入库单" left-arrow @click-left="onCancel" fixed placeholder right-text="提交" @click-right="onSubmitInStock" />
         <div v-if="!result" v-loading="basic.loading">
-            <el-form label-position="top" ref="basic" :rules="rules" label-width="auto" :model="basic">
+            <el-form label-position="top" ref="basic" :rules="rules" label-width="120px" :model="basic">
                 <el-form-item label="入库类型" prop="classification">
                     <el-select v-model="basic.classification" placeholder="选择入库类型">
                         <el-option v-for="(item, inx) in classification" :id="inx" :label="item.name" :value="item.id" />
@@ -21,6 +21,9 @@
                     </el-select>
                 </el-form-item>
             </el-form>
+            <div>
+                <el-input v-model="basic.remark" placeholder="请输入备注" />
+            </div>
 
             <!-- 物品选择按钮 -->
             <van-cell title="选择物品" is-link value="点击选择" @click="onOpenAdditem()" />
@@ -48,12 +51,22 @@
             <!-- 物品数目 -->
             <div v-for="(val, inx) in basic.items">
                 <van-swipe-cell>
-                    <van-cell border="false" :title="val.name">
+                    <van-cell :border="false" :title="val.name">
                         <input
                             type="text"
                             v-model="basic.items[inx].quantity"
-                            style="padding: 0; width: 100px; outline: none; border: none; background: none"
-                            placeholder="输入入库数目" />
+                            style="
+                                padding: 0;
+                                width: 100px;
+                                outline: none;
+                                border: none;
+                                background: none;
+                                border-bottom: 1px solid #ddd;
+                                transition: border-color 0.3s;
+                            "
+                            placeholder="填写入库数目"
+                            onfocus="this.style.borderBottom = '1px solid #3498db'"
+                            onblur="this.style.borderBottom = '1px solid #ddd'" />
                     </van-cell>
                     <template #right>
                         <van-button square type="danger" @click="onRemoveItemlist(inx)" text="删除" />
@@ -61,13 +74,6 @@
                 </van-swipe-cell>
             </div>
             <!-- 物品数目结束 -->
-            <div style="padding-top: 10px">
-                <el-form label-position="left" label-width="auto" :model="basic">
-                    <el-form-item label="" label-position="left">
-                        <el-input v-model="basic.remark" placeholder="请输入备注" />
-                    </el-form-item>
-                </el-form>
-            </div>
         </div>
         <!-- 提交成功后展示 -->
         <div v-else>

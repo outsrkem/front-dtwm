@@ -24,8 +24,9 @@
                     <el-form-item label="供应商" prop="supplier">
                         <el-space>
                             <el-select v-model="basic.supplier" placeholder="选择供应商" clearable filterable>
-                                <el-option v-for="(item, inx) in supplier" :id="inx" :label="`${item.name}（${item.person}）`" :value="item.id">
-                                    <span style="float: left">{{ item.name }}（{{ item.person }}）</span>
+                                <el-option v-for="(item, inx) in supplier" :id="inx" :label="item.name" :value="item.id">
+                                    <span style="float: left">{{ item.name }}</span>
+                                    <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px"> {{ item.person }}</span>
                                 </el-option>
                             </el-select>
                             <el-button style="font-size: 19px; padding-left: 8px; padding-right: 8px" :icon="Refresh" @click="onRefreshBasicData" />

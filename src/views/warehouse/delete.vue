@@ -40,7 +40,7 @@ export default {
     },
     methods: {
         formatDate(time) {
-            return formatTime(time);
+            return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
         },
         openDialog() {
             this.dialogVisible = true;

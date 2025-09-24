@@ -26,7 +26,9 @@ const MItems = () => import("../mobile/views/item/index.vue");
 const Muser = () => import("../mobile/views/user/index.vue");
 const MStockin = () => import("../mobile/views/stockin/index.vue");
 const MStockout = () => import("../mobile/views/stockout/index.vue");
-const MOrder = () => import("../mobile/views/order/index.vue");
+const MOrderList = () => import("../mobile/views/order/OrderList.vue");
+const MOrderSearch = () => import("../mobile/views/order/OrderSearch.vue");
+const MOrderDetail = () => import("../mobile/views/order/OrderDetail.vue");
 // 路由配置
 const routes = [
     {
@@ -45,8 +47,11 @@ const routes = [
             { meta: { title: "仓库信息" }, path: "/warehouse", name: "warehouse", component: Warehouse },
             { meta: { title: "物品管理" }, path: "/items", name: "items", component: loadComponent(Items, MItems) },
             { meta: { title: "客户管理" }, path: "/supplier", name: "supplier", component: Supplier },
+            // 手机独立页面
             { meta: { title: "用户中心" }, path: "/user", name: "user", component: Muser },
-            { meta: { title: "单据列表" }, path: "/order", name: "order", component: MOrder },
+            { meta: { title: "单据列表", keepAlive: true }, path: "/order-list", name: "StockOrderList", component: MOrderList },
+            { meta: { title: "搜索单据" }, path: "/stock/order-search", name: "StockOrderSearch", component: MOrderSearch },
+            { meta: { title: "单据详情" }, path: "/stock/order-detail/:oid", name: "StockOrderDetail", component: MOrderDetail, props: true },
         ],
     },
     { meta: { title: "仓库管理系统 - 数据打印" }, path: "/eprint", name: "eprint", component: PrintPage },

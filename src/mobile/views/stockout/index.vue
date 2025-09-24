@@ -20,6 +20,9 @@
                         </el-option>
                     </el-select>
                 </el-form-item>
+                <div>
+                    <el-input v-model="basic.remark" placeholder="请输出备注" />
+                </div>
             </el-form>
             <!-- 物品选择按钮 -->
             <van-cell title="选择物品" is-link value="点击选择" @click="onOpenAdditem()" />
@@ -28,7 +31,7 @@
                 <van-nav-bar title="选择物品" left-arrow @click-left="onCloseItem" fixed placeholder right-text="确定" @click-right="onAddItemTolist" />
                 <el-checkbox-group v-model="selectedRows">
                     <van-cell-group inset>
-                        <van-cell v-for="(item, inx) in items" :title="item.name" :label="`可用：${item.available}${item.unit}`">
+                        <van-cell v-for="(item, inx) in items" :title="item.name" :label="`可用库存：${item.available}${item.unit}`">
                             <div style="width: 100%">
                                 <el-checkbox :value="item" />
                             </div>
@@ -44,12 +47,22 @@
             <!-- 物品数目 -->
             <div v-for="(val, inx) in basic.items">
                 <van-swipe-cell>
-                    <van-cell border="false" :title="val.name">
+                    <van-cell :border="false" :title="val.name">
                         <input
                             type="text"
                             v-model="basic.items[inx].quantity"
-                            style="padding: 0; width: 100px; outline: none; border: none; background: none"
-                            :placeholder="`剩余：${val.available}`" />
+                            style="
+                                padding: 0;
+                                width: 100px;
+                                outline: none;
+                                border: none;
+                                background: none;
+                                border-bottom: 1px solid #ddd;
+                                transition: border-color 0.3s;
+                            "
+                            :placeholder="`剩余：${val.available}`"
+                            onfocus="this.style.borderBottom = '1px solid #3498db'"
+                            onblur="this.style.borderBottom = '1px solid #ddd'" />
                     </van-cell>
                     <template #right>
                         <van-button square type="danger" @click="onRemoveItemlist(inx)" text="删除" />
@@ -57,13 +70,6 @@
                 </van-swipe-cell>
             </div>
             <!-- 物品数目结束 -->
-            <div style="padding-top: 10px">
-                <el-form label-position="left" label-width="auto" :model="basic">
-                    <el-form-item label="" label-position="left">
-                        <el-input v-model="basic.remark" placeholder="请输出备注" />
-                    </el-form-item>
-                </el-form>
-            </div>
         </div>
         <!-- 提交成功后展示 -->
         <div v-else>
@@ -150,7 +156,7 @@ export default {
         onOpenAdditem() {
             this.query.item.name = "";
             this.selectItem.dialogVisible = true;
-            this.loadSelectInventory(this.pageSize, this.page);
+            this.loadGetstockorder(this.pageSize, this.page);
         },
         // 关闭选择物品弹窗
         onCloseItem() {
@@ -215,7 +221,7 @@ export default {
         // 搜索物品
         onSearch() {
             this.page = 1;
-            if (this.query.serial != "") this.loadSelectInventory(this.pageSize, 1);
+            if (this.query.serial != "") this.loadGetstockorder(this.pageSize, 1);
             else this.$message.warning(msgcon("请输出检索条件"));
         },
         // 出库操作
