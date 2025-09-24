@@ -94,3 +94,10 @@ export const ListUser = (params) => ajax(`${baseURL}/v1/user`, "GET", params, nu
 export const ListPermission = (paths) => ajax(`${baseURL}/v1/checkpoint/control/${paths.warehouse_id}`, "GET", null, null);
 export const AddPermission = (paths, data) => ajax(`${baseURL}/v1/checkpoint/control/${paths.warehouse_id}`, "POST", null, data);
 export const DeletePermission = (paths, data) => ajax(`${baseURL}/v1/checkpoint/control/${paths.warehouse_id}`, "DELETE", null, data);
+
+// h.GET("/v1/reversal/list", apc("dtwm:supplier:create"), reversal.ListReversal());
+// h.POST("/v1/order/reversal/:orderId/:detailId",reversal.CreateReversal()) // 新建红冲 √
+// h.POST("/v1/reversal/examine/:detailId",  reversal.ExamineReversal())       // 审批红冲
+export const ListReversal = (params) => ajax(`${baseURL}/v1/reversal/list`, "GET", params, null);
+export const CreateReversal = (paths, data) => ajax(`${baseURL}/v1/order/reversal/${paths.order_id}/${paths.detail_id}`, "POST", null, data);
+export const ExamineReversal = (paths, data) => ajax(`${baseURL}/v1/reversal/examine/${paths.detail_id}`, "POST", null, data);

@@ -36,6 +36,10 @@
                         <el-icon><User /></el-icon>
                         <template #title><span>供应商/客户管理</span></template>
                     </el-menu-item>
+                    <el-menu-item index="/reversal" @click="OnSwitchRoutes('/reversal')">
+                        <el-icon><DocumentChecked /></el-icon>
+                        <template #title><span>冲销管理</span></template>
+                    </el-menu-item>
                 </el-menu>
             </el-aside>
         </div>

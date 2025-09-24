@@ -6,12 +6,12 @@ const statusConfig = {
         class: "status-draft",
     },
     PENDING: {
-        label: "待确认",
+        label: "待审批",
         color: "#faad14",
         class: "status-pending",
     },
     APPROVED: {
-        label: "已确认",
+        label: "已审批",
         color: "#52c41a",
         class: "status-approved",
     },

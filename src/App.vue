@@ -25,11 +25,7 @@ export default {
             // 仅当页面切回前台（可见状态）时，调用检测接口
             if (document.visibilityState === "visible") {
                 try {
-                    const res = await this.loadResume();
-                    // 登录过期（示例用401状态码，需与后端协商一致）
-                    if (res.code === 401) {
-                        toLoginPage(); // 跳转至登录页
-                    }
+                    await this.loadResume();
                 } catch (error) {
                     console.error("登录状态检测失败", error);
                 }

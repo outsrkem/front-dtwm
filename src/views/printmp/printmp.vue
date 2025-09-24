@@ -24,14 +24,12 @@
                                 <p>提交人：{{ stockorder.owner.username }}</p>
                                 <p style="margin-left: 15px">提交时间：{{ formatDate(stockorder.create_time) }}</p>
                             </div>
-                            <!-- <div style="display: flex; align-items: flex-end; margin-top: 5px">
-                                <p>供应商：{{ stockorder.serial }}</p>
-                            </div> -->
+
                             <div style="display: flex; align-items: flex-end; margin-top: 5px">
                                 <p>单据编号：{{ stockorder.serial }}</p>
                                 <p style="margin-left: 15px">状态：{{ getStatusConfig(stockorder.status).label }}</p>
                                 <p style="margin-left: 15px">
-                                    出库日期：
+                                    {{ currentTheme.statusText.name }}
                                     <!-- 当状态为 EXECUTED 或 COMPLETED 时显示实际日期 -->
                                     <span v-if="['EXECUTED', 'COMPLETED'].includes(stockorder.status)">
                                         {{ dayjs(stockorder.update_time).format("YYYY-MM-DD") }}
@@ -75,17 +73,17 @@
                                 <tr>
                                     <th style="padding: 8px 12px">No.</th>
                                     <th style="padding: 8px 12px">物品名称</th>
-                                    <th style="padding: 8px 12px">单位</th>
                                     <th style="padding: 8px 12px">规格</th>
+                                    <th style="padding: 8px 12px">单位</th>
                                     <th style="padding: 8px 12px">{{ currentTheme.table.column.quantity }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(val, inx) in OrderDetails" :key="inx">
                                     <td style="text-align: center">{{ inx + 1 }}</td>
-                                    <td style="text-align: center">{{ val.item.name }}</td>
-                                    <td style="text-align: center">{{ val.item.unit }}</td>
+                                    <td style="text-align: center">{{ itemName(val) }}</td>
                                     <td style="text-align: center">{{ val.item.specification }}</td>
+                                    <td style="text-align: center">{{ val.item.unit }}</td>
                                     <td style="text-align: center">{{ val.detailedly.quantity }}</td>
                                 </tr>
                             </tbody>
@@ -131,6 +129,7 @@ export default {
                         main: "康县阳坝镇中心小学食堂原材料入库记录表",
                     },
                     statusText: {
+                        name: "入库日期：",
                         pending: "待入库", // 入库场景的待处理文本
                     },
                     table: {
@@ -153,6 +152,7 @@ export default {
                         main: "康县阳坝镇中心小学食堂原材料出库记录表",
                     },
                     statusText: {
+                        name: "出库日期：",
                         pending: "待出库", // 出库场景的待处理文本
                     },
                     table: {
@@ -174,6 +174,7 @@ export default {
             // 当前使用的主题（根据类型动态切换）
             currentTheme: {
                 title: { main: "" },
+                statusText: { name: "", pending: "" },
                 table: { title: { type: "", details: "" }, column: { quantity: "" } },
                 signature: { keeper: "", receiver: "", safetyOfficer: "" },
             },
@@ -198,6 +199,7 @@ export default {
             resTime: null,
         };
     },
+    computed: {},
     // watch: {
     //     query: {
     //         deep: true,
@@ -213,9 +215,27 @@ export default {
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
         },
+        itemName(val) {
+            if (val.detailedly.correct_type === "ORIGINAL") {
+                return val.item.name;
+            }
+            if (val.detailedly.correct_type === "REVERSAL") {
+                if (val.detailedly.status === "PENDING") {
+                    return val.item.name + "（红冲修正,待审核）";
+                }
+                if (val.detailedly.status === "COMPLETED") {
+                    return val.item.name + "（红冲修正,已完成）";
+                }
+                if (val.detailedly.status === "REJECTED") {
+                    return val.item.name + "（红冲修正,已拒绝）";
+                }
+                if (val.detailedly.status === "APPROVED") {
+                    return val.item.name + "（红冲修正,已执行）";
+                }
+            }
+        },
         isTimestampOver(timestamp) {
             // 判断毫秒时间戳是否超过当前时间5分钟,超过输出：true
-
             return dayjs().diff(dayjs(timestamp), "minute") > 5;
         },
         eprint() {

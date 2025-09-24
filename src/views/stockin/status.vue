@@ -8,8 +8,8 @@
                     <template #title>提交</template>
                     <template #description>
                         <div v-if="order.status === 'DRAFT'">
-                            <el-button plain size="small" type="primary" @click="handleOperation({ action: 'submit', text: '提交' })"> 提交 </el-button>
-                            <el-button plain size="small" type="warning" @click="handleOperation({ action: 'cancel', text: '撤销' })"> 撤销 </el-button>
+                            <el-button plain size="small" type="primary" @click="confirmOperation('submit', '提交')"> 提交 </el-button>
+                            <el-button plain size="small" type="warning" @click="confirmOperation('cancel', '撤销')"> 撤销 </el-button>
                         </div>
                         <div v-else>
                             {{ order.status === "CANCELLED" ? "已撤销" : "已提交" }}
@@ -22,8 +22,8 @@
                     <template #title>确认</template>
                     <template #description>
                         <div v-if="order.status === 'PENDING'">
-                            <el-button plain size="small" type="success" @click="handleOperation({ action: 'approve', text: '确认' })"> 确认 </el-button>
-                            <el-button plain size="small" type="danger" @click="handleOperation({ action: 'cancel', text: '撤销' })"> 撤销 </el-button>
+                            <el-button plain size="small" type="success" @click="confirmOperation('approve', '确认')"> 确认 </el-button>
+                            <el-button plain size="small" type="danger" @click="confirmOperation('cancel', '撤销')"> 撤销 </el-button>
                         </div>
                         <div v-else-if="order.status === 'APPROVED'">已确认</div>
                         <div v-else-if="order.status === 'REJECTED'">已拒绝</div>
@@ -36,7 +36,7 @@
                     <template #title>入库</template>
                     <template #description>
                         <div v-if="order.status === 'APPROVED'">
-                            <el-button plain size="small" type="warning" @click="handleOperation({ action: 'execute', text: '入库' })"> 入库 </el-button>
+                            <el-button plain size="small" type="warning" @click="confirmOperation('execute', '入库')"> 入库 </el-button>
                         </div>
                         <div v-else-if="order.status === 'EXECUTED'">已入库</div>
                         <div v-else>-</div>
@@ -50,7 +50,7 @@
                     </template>
                     <template #description>
                         <div v-if="order.status === 'EXECUTED' && !isCurrentSessionExecuted">
-                            <el-button plain size="small" type="success" @click="handleOperation({ action: 'complete', text: '完成' })"> 完成 </el-button>
+                            <el-button plain size="small" type="success" @click="confirmOperation('complete', '完成')"> 完成 </el-button>
                         </div>
                         <div v-else>
                             {{ statusText }}
@@ -78,8 +78,15 @@
                         <el-table-column prop="item.name" label="名称" />
                         <el-table-column prop="item.property" label="属性" />
                         <el-table-column prop="item.specification" label="规格" />
-                        <el-table-column prop="item.unit" label="单位" />
-                        <el-table-column prop="detailedly.quantity" label="入库数目" />
+                        <el-table-column prop="item.unit" label="单位" width="100" />
+                        <el-table-column prop="detailedly.quantity" label="入库数目" width="100" />
+                        <el-table-column label="类型" width="150">
+                            <template #default="scope">
+                                <span v-if="scope.row.detailedly.correct_type === 'ORIGINAL'">原始记录</span>
+                                <span v-if="scope.row.detailedly.correct_type === 'REVERSAL'" style="color: red">红冲修正</span>
+                                <span v-if="scope.row.detailedly.correct_type === 'SUPPLEMENT'">补充修正</span>
+                            </template>
+                        </el-table-column>
                     </el-table>
                 </div>
 
@@ -95,6 +102,16 @@
 import { GetOrderDetails, GetParticulars, ReviewFlow } from "../../api/index.js";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { formatTime } from "../../utils/date.js";
+
+// 操作配置映射
+const OPERATION_CONFIG = {
+    submit: { text: "提交", successMsg: "提交成功" },
+    cancel: { text: "撤销", successMsg: "撤销成功" },
+    approve: { text: "确认", successMsg: "确认成功" },
+    execute: { text: "入库", successMsg: "入库成功" },
+    complete: { text: "完成", successMsg: "完成成功" },
+};
+
 export default {
     name: "InStatus",
     props: {
@@ -109,30 +126,28 @@ export default {
             pageTotal: 0,
             pageSize: 10,
             page: 1,
-            OrderDetails: [], // 单据流水列表
+            OrderDetails: [],
             order: {
                 warehouse: {},
                 classification: {},
                 owner: {},
-            }, // 订单信息
+            },
             loading: true,
-            isCurrentSessionExecuted: false, // 标记当前会话是否执行过入库操作
+            isCurrentSessionExecuted: false,
         };
     },
     computed: {
         currentStep() {
-            // 取消或拒绝状态下高亮最后一步
             if (this.order.status === "CANCELLED" || this.order.status === "REJECTED") {
                 return 3;
             }
 
-            // 正常流程步骤映射
             const statusMap = {
-                DRAFT: 0, // 草稿在第一步
-                PENDING: 1, // 待审核在第二步
-                APPROVED: 2, // 已审核在第三步
-                EXECUTED: 3, // 已入库在第四步
-                COMPLETED: 3, // 已完成在第四步
+                DRAFT: 0,
+                PENDING: 1,
+                APPROVED: 2,
+                EXECUTED: 3,
+                COMPLETED: 4,
             };
             return statusMap[this.order.status] || 0;
         },
@@ -154,7 +169,7 @@ export default {
             deep: true,
             immediate: true,
             handler(newVal) {
-                if (newVal && newVal.order_id) {
+                if (newVal?.order_id) {
                     this.loadOrderDetails();
                     this.loadGetOrderDetails();
                 }
@@ -162,103 +177,96 @@ export default {
         },
     },
     methods: {
-        // 格式化日期时间
         formatDate(time) {
             return time ? formatTime(time).format("YYYY-MM-DD HH:mm:ss") : "-";
         },
 
-        // 分页相关方法
         onCurrentChange(p) {
             this.page = p;
             this.loadOrderDetails(this.pageSize, p);
         },
+
         onSizeChange(s) {
             this.pageSize = s;
             this.page = 1;
             this.loadOrderDetails(s, 1);
         },
 
-        // 处理操作按钮点击
-        handleOperation(operation) {
-            this.$confirm(`确定要${operation.text}吗？`)
-                .then(() => {
-                    // 记录当前会话执行的入库操作
-                    if (operation.action === "execute") {
-                        this.isCurrentSessionExecuted = true;
-                    }
-                    this.executeOperation(operation.action);
-                })
-                .catch(() => {
-                    this.$message.info("已取消操作");
-                });
+        // 确认操作
+        confirmOperation(action, text) {
+            this.$confirm(`确定要${text}吗？`)
+                .then(() => this.executeOperation(action))
+                .catch(() => this.$message.info("已取消操作"));
         },
 
-        // 执行具体操作
-        executeOperation(action) {
-            if (!this.vdata || !this.vdata.order_id) {
+        // 执行操作
+        async executeOperation(action) {
+            if (!this.vdata?.order_id) {
                 this.$message.error("缺少订单信息");
                 return;
             }
 
             this.loading = true;
-            const params = {
-                order_id: this.vdata.order_id,
-                action: action,
-            };
 
-            ReviewFlow(params)
-                .then(() => {
-                    this.loading = false;
-                    this.$message.success("操作成功");
-                    this.loadGetOrderDetails();
-                    this.$globalBus.emit("onRefresh");
-                })
-                .catch((err) => {
-                    this.loading = false;
-                    this.$message.error(`操作失败：${err.data.metadata.message}`);
+            // 记录入库操作
+            if (action === "execute") {
+                this.isCurrentSessionExecuted = true;
+            }
+
+            try {
+                await ReviewFlow({
+                    order_id: this.vdata.order_id,
+                    action: action,
                 });
+
+                this.$message.success(OPERATION_CONFIG[action]?.successMsg || "操作成功");
+                this.loadGetOrderDetails();
+                this.$globalBus.emit("onRefresh");
+            } catch (err) {
+                this.$message.error(`操作失败：${err.data.metadata.message}`);
+            } finally {
+                this.loading = false;
+            }
         },
 
-        // 加载订单流水详情
-        loadOrderDetails(page_size = 10, page = 1) {
+        // 加载订单详情列表
+        async loadOrderDetails(page_size = 10, page = 1) {
             this.loading = true;
             const params = { oid: this.vdata.order_id, ...convertToLimitOffset(page, page_size) };
 
-            withDelay(() => GetParticulars(params))
-                .then((res) => {
-                    this.OrderDetails = res.payload.items || [];
-                    this.pageTotal = res.payload.page_info.total;
-                    this.loading = false;
-                })
-                .catch(() => {
-                    this.OrderDetails = [];
-                    this.loading = false;
-                });
+            try {
+                const res = await withDelay(() => GetParticulars(params));
+                this.OrderDetails = res.payload.items || [];
+                this.pageTotal = res.payload.page_info.total;
+            } catch {
+                this.OrderDetails = [];
+            } finally {
+                this.loading = false;
+            }
         },
 
         // 加载订单基本信息
-        loadGetOrderDetails() {
+        async loadGetOrderDetails() {
             const paths = { order_id: this.vdata.order_id };
-            withDelay(() => GetOrderDetails(paths))
-                .then((res) => {
-                    this.order = res.payload || {};
-                    this.loading = false;
-                })
-                .catch(() => {
-                    this.loading = false;
-                });
+
+            try {
+                const res = await withDelay(() => GetOrderDetails(paths), 500);
+                this.order = res.payload || {};
+            } catch {
+                // 错误处理
+            } finally {
+                this.loading = false;
+            }
         },
 
-        // 打开对话框
         openDialog() {
-            this.isCurrentSessionExecuted = false; // 重置标记
+            this.isCurrentSessionExecuted = false;
             this.dialogVisible = true;
-            if (this.vdata && this.vdata.order_id) {
+            if (this.vdata?.order_id) {
                 this.loadOrderDetails();
             }
         },
 
-        // 关闭对话框
         closeDialog() {
             this.dialogVisible = false;
         },

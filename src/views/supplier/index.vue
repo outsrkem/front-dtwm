@@ -17,11 +17,6 @@
             <el-table :data="items" style="width: 100%" v-loading="loading">
                 <el-table-column prop="name" label="名称" show-overflow-tooltip />
                 <el-table-column prop="person" label="联系人" show-overflow-tooltip />
-                <el-table-column prop="phone" label="电话" show-overflow-tooltip />
-                <el-table-column prop="email" label="邮箱" show-overflow-tooltip />
-                <el-table-column prop="address" label="地址" show-overflow-tooltip>
-                    <template #default="scope"> {{ scope.row.province }}{{ scope.row.city }}{{ scope.row.district }}{{ scope.row.address }} </template>
-                </el-table-column>
                 <el-table-column label="状态">
                     <template #default="scope">
                         <span class="status-dot" :class="scope.row.status === 1 ? 'usable' : 'unusable'" />
@@ -38,9 +33,9 @@
                 <el-table-column label="操作" min-width="120">
                     <template #default="scope">
                         <el-space>
+                            <el-button link type="primary" @click="onEditSupplier(scope.row)"> 编辑 </el-button>
                             <el-button link type="danger" v-if="scope.row.status === 1" @click="onDisableSupplier(scope.row)"> 禁用 </el-button>
                             <el-button link type="primary" v-if="scope.row.status === 0" @click="onEnableSupplier(scope.row)"> 启用 </el-button>
-                            <el-button link type="primary" @click="onEditSupplier(scope.row)"> 编辑 </el-button>
                             <el-button link type="danger" @click="onDeleteSupplier(scope.row)"> 删除 </el-button>
                         </el-space>
                     </template>

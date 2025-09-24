@@ -60,14 +60,21 @@
                     <template #default="scope">
                         <span
                             class="status-dot"
-                            :class="getStatusConfig(scope.row.order.status).class"
-                            :title="getStatusConfig(scope.row.order.status).label"></span>
+                            :class="getStatusConfig(scope.row.detailedly.status).class"
+                            :title="getStatusConfig(scope.row.detailedly.status).label"></span>
                         <span class="status-text">
-                            {{ getStatusConfig(scope.row.order.status).label }}
+                            {{ getStatusConfig(scope.row.detailedly.status).label }}
                         </span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="create_time" label="提交时间" width="260">
+                <el-table-column label="类型" width="100">
+                    <template #default="scope">
+                        <span v-if="scope.row.detailedly.correct_type === 'ORIGINAL'">原始记录</span>
+                        <span v-if="scope.row.detailedly.correct_type === 'REVERSAL'" style="color: red">红冲修正</span>
+                        <span v-if="scope.row.detailedly.correct_type === 'SUPPLEMENT'">补充修正</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="提交时间" width="260">
                     <template #default="scope">{{ formatDate(scope.row.detailedly.create_time) }}</template>
                 </el-table-column>
             </el-table>

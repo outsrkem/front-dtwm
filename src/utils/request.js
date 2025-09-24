@@ -5,7 +5,7 @@ import axios from "axios";
 // import router from '@/router'
 import { toLoginPage } from "./common.js";
 // 非组件模块可以这样加载使用 element 的 message 提示组件
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 const request = axios.create({});
 

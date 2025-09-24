@@ -3,6 +3,8 @@ import { isMobile } from "../utils/device";
 const NotFound = () => import("../views/404/index.vue");
 const Layout = () => import("../views/layout/index.vue");
 // const Home = () => import("../views/home/index.vue");
+const ReversalIdx = () => import("../views/reversal/index.vue");
+const ReversalApplication = () => import("../views/reversal/reversal.vue");
 const Overview = () => import("../views/overview/index.vue");
 const Inventory = () => import("../views/inventory/index.vue");
 const Stockout = () => import("../views/stockout/index.vue");
@@ -15,11 +17,6 @@ const OutWarehouse = () => import("../views/stockout/outwarehouse.vue");
 const Supplier = () => import("../views/supplier/index.vue");
 const PrintPage = () => import("../views/printmp/printmp.vue"); // 打印页面
 
-// 动态导入组件（根据设备类型）
-const loadComponent = (pcComponent, mobileComponent) => {
-    return isMobile() ? mobileComponent : pcComponent;
-};
-
 const MobileHome = () => import("../mobile/views/home/index.vue");
 const MobileLayout = () => import("../mobile/layout/index.vue");
 const MItems = () => import("../mobile/views/item/index.vue");
@@ -29,6 +26,11 @@ const MStockout = () => import("../mobile/views/stockout/index.vue");
 const MOrderList = () => import("../mobile/views/order/OrderList.vue");
 const MOrderSearch = () => import("../mobile/views/order/OrderSearch.vue");
 const MOrderDetail = () => import("../mobile/views/order/OrderDetail.vue");
+
+// 动态导入组件（根据设备类型）
+const loadComponent = (pcComponent, mobileComponent) => {
+    return isMobile() ? mobileComponent : pcComponent;
+};
 // 路由配置
 const routes = [
     {
@@ -44,9 +46,11 @@ const routes = [
             { meta: { title: "入库管理" }, path: "/stockin", name: "stockin", component: Stockin },
             { meta: { title: "入库管理 - 入库申请" }, path: "/stockin/create", name: "inWarehouse", component: loadComponent(InWarehouse, MStockin) },
             { meta: { title: "出入库明细" }, path: "/particulars", name: "particulars", component: Particulars },
+            { meta: { title: "单据红冲" }, path: "/order/reversal/:oid", name: "ReversalApplication", component: ReversalApplication },
             { meta: { title: "仓库信息" }, path: "/warehouse", name: "warehouse", component: Warehouse },
             { meta: { title: "物品管理" }, path: "/items", name: "items", component: loadComponent(Items, MItems) },
             { meta: { title: "客户管理" }, path: "/supplier", name: "supplier", component: Supplier },
+            { meta: { title: "红冲管理" }, path: "/reversal", name: "reversalIdx", component: ReversalIdx },
             // 手机独立页面
             { meta: { title: "用户中心" }, path: "/user", name: "user", component: Muser },
             { meta: { title: "单据列表", keepAlive: true }, path: "/order-list", name: "StockOrderList", component: MOrderList },

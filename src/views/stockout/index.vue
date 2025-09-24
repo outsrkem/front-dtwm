@@ -48,6 +48,16 @@
                             <el-button link type="primary" @click="onLookParticulars(scope.row)">明细</el-button>
                             <el-button link type="primary" @click="onPrint(scope.row)">打印</el-button>
                             <el-button link type="primary" @click="onOpenDealWith(scope.row)">处理</el-button>
+                            <el-dropdown trigger="click" placement="bottom-end">
+                                <el-button link type="primary">更多</el-button>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item>
+                                            <el-button link type="primary" @click="onReversal(scope.row)">红冲</el-button>
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
                         </el-space>
                     </template>
                 </el-table-column>
@@ -152,6 +162,13 @@ export default {
         },
         onLookParticulars(val) {
             this.$router.push({ name: "particulars", query: { serial: val.serial } });
+        },
+        onReversal(val) {
+            this.$router.push({
+                name: "ReversalApplication",
+                params: { oid: val.order_id },
+                query: { _b: "o" },
+            });
         },
     },
     created() {

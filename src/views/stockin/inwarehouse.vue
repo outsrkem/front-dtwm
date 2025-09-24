@@ -89,11 +89,14 @@
             <el-dialog v-model="selectItem.dialogVisible" width="1200" title="选择物品">
                 <div>
                     <div>
-                        <el-input style="width: 340px" v-model="query.item.name" placeholder="按名称搜索数据" clearable @change="onSearch()">
-                            <template #prefix>
-                                <el-icon class="el-input__icon"><search /></el-icon>
-                            </template>
-                        </el-input>
+                        <el-space>
+                            <el-input style="width: 340px" v-model="query.item.name" placeholder="按名称搜索数据" clearable @change="onSearch()">
+                                <template #prefix>
+                                    <el-icon class="el-input__icon"><search /></el-icon>
+                                </template>
+                            </el-input>
+                            <!-- <el-link type="primary">创建物品</el-link> -->
+                        </el-space>
                     </div>
                 </div>
                 <div>
