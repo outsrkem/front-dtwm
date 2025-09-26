@@ -101,3 +101,6 @@ export const DeletePermission = (paths, data) => ajax(`${baseURL}/v1/checkpoint/
 export const ListReversal = (params) => ajax(`${baseURL}/v1/reversal/list`, "GET", params, null);
 export const CreateReversal = (paths, data) => ajax(`${baseURL}/v1/order/reversal/${paths.order_id}/${paths.detail_id}`, "POST", null, data);
 export const ExamineReversal = (paths, data) => ajax(`${baseURL}/v1/reversal/examine/${paths.detail_id}`, "POST", null, data);
+
+// h.GET("/v1/print/theme/:warehousesId", printcfg.GetPrintTheme())
+export const GetPrintTheme = (paths) => ajax(`${baseURL}/v1/print/theme/${paths.warehouses_id}`, "GET", null, null);

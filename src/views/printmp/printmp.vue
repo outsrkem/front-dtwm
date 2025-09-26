@@ -8,6 +8,7 @@
                 <button @click="handlePrint()">打印</button>
             </el-space>
         </div>
+
         <!-- 主容器：添加顶部内边距，避免内容被固定横条遮挡 -->
         <div class="print-container" v-loading="loading" style="min-height: 500px">
             <!-- 打印内容区域 -->
@@ -15,7 +16,7 @@
                 <div class="print-template pdf-page" style="padding: 5px">
                     <!-- 主标题：根据类型切换 -->
                     <div class="head-title">
-                        <p>{{ currentTheme.title.main }}</p>
+                        <p>{{ printTheme.title.main }}</p>
                     </div>
 
                     <div style="margin-bottom: 5px; display: flex; justify-content: space-between">
@@ -94,15 +95,17 @@
                         <p>备注：{{ stockorder.remark ? stockorder.remark : "无" }}</p>
                     </div>
                     <!-- 签字区域 -->
-                    <div style="margin-right: 20px">
+                    <div style="margin-right: 20px" v-if="printTheme.signature.enabled">
                         <div style="display: flex; flex-direction: column; align-items: flex-end; width: 100%">
-                            <p style="padding-top: 30px">{{ currentTheme.signature.keeper }}：______________________</p>
-                            <p style="padding-top: 30px">{{ currentTheme.signature.receiver }}：______________________</p>
-                            <p style="padding-top: 30px">{{ currentTheme.signature.safetyOfficer }}：______________________</p>
+                            <span v-for="val in printTheme.signature.items">
+                                <p style="padding-top: 40px">{{ val.label }}：______________________</p>
+                            </span>
                         </div>
                     </div>
+                    <!-- 签字区域 -->
                 </div>
             </div>
+            <!-- 打印内容区域 -->
         </div>
     </div>
 </template>
@@ -113,7 +116,8 @@ import vueQr from "vue-qr/src/packages/vue-qr.vue";
 import { formatTime } from "../../utils/date.js";
 import { withDelay } from "../../utils/common.js";
 import { getStatusConfig } from "../../utils/status.js";
-import { SelectStockOrder, GetParticulars } from "../../api/index.js";
+import { printTheme } from "../../utils/theme.js";
+import { SelectStockOrder, GetParticulars, GetPrintTheme } from "../../api/index.js";
 export default {
     name: "PrintPageIndex",
     components: { vueQr },
@@ -123,11 +127,9 @@ export default {
             dayjs,
             getStatusConfig,
             loading: false,
+            // 统一的静态展示文本
             theme: {
                 in: {
-                    title: {
-                        main: "康县阳坝镇中心小学食堂原材料入库记录表",
-                    },
                     statusText: {
                         name: "入库日期：",
                         pending: "待入库", // 入库场景的待处理文本
@@ -141,16 +143,8 @@ export default {
                             quantity: "入库数目",
                         },
                     },
-                    signature: {
-                        keeper: "库管员",
-                        receiver: "送货人", // 入库场景为"送货人"
-                        safetyOfficer: "食品卫生安全员",
-                    },
                 },
                 out: {
-                    title: {
-                        main: "康县阳坝镇中心小学食堂原材料出库记录表",
-                    },
                     statusText: {
                         name: "出库日期：",
                         pending: "待出库", // 出库场景的待处理文本
@@ -164,20 +158,15 @@ export default {
                             quantity: "出库数目",
                         },
                     },
-                    signature: {
-                        keeper: "库管员",
-                        receiver: "领用人", // 出库场景为"领用人"
-                        safetyOfficer: "食品卫生安全员",
-                    },
                 },
             },
             // 当前使用的主题（根据类型动态切换）
             currentTheme: {
-                title: { main: "" },
                 statusText: { name: "", pending: "" },
                 table: { title: { type: "", details: "" }, column: { quantity: "" } },
-                signature: { keeper: "", receiver: "", safetyOfficer: "" },
             },
+            // 分仓库的打印配置参数文本
+            printTheme: printTheme(),
             stockorder: {
                 warehouse: {
                     name: "",
@@ -193,8 +182,10 @@ export default {
             }, // 单据信息
             OrderDetails: [],
             query: {
+                type: "",
                 serial: "",
-                id: "",
+                order_id: "",
+                warehouse_id: "",
             },
             resTime: null,
         };
@@ -242,7 +233,9 @@ export default {
             this.loading = true;
         },
         goBack() {
-            window.history.back();
+            // 按来源类型返回对应的页
+            if (this.query.type === "IN") this.$router.push({ name: "stockin" });
+            if (this.query.type === "OUT") this.$router.push({ name: "stockout" });
         },
         handlePrint() {
             if (this.isTimestampOver(this.resTime)) {
@@ -281,15 +274,40 @@ export default {
                     this.OrderDetails = [];
                 });
         },
+        // 获取打印主题
+        loadGetPrintTheme: function (warehouses_id) {
+            const paths = { warehouses_id: warehouses_id };
+            GetPrintTheme(paths)
+                .then((res) => {
+                    if (this.query.type === "IN") {
+                        this.printTheme = res.payload.theme.in;
+                        return;
+                    }
+                    if (this.query.type === "OUT") {
+                        this.printTheme = res.payload.theme.out;
+                        return;
+                    }
+                    this.printTheme = printTheme(); // 兜底
+                })
+                .catch(() => {
+                    this.printTheme = printTheme(); // 兜底
+                });
+        },
         onRefresh() {
-            this.loadSelectStockOrder(this.query.id);
-            this.loadOrderDetails(this.query.id);
+            this.loadGetPrintTheme(this.query.warehouse_id);
+            this.loadSelectStockOrder(this.query.order_id);
+            this.loadOrderDetails(this.query.order_id);
         },
     },
     created() {
-        this.query.id = this.$route.query.id;
-        this.loadSelectStockOrder(this.query.id);
-        this.loadOrderDetails(this.query.id);
+        // 保存参数
+        this.query.type = this.$route.query._type;
+        this.query.warehouse_id = this.$route.query.warehouse_id;
+        this.query.order_id = this.$route.query.order_id;
+        // 加载请求
+        this.loadGetPrintTheme(this.query.warehouse_id);
+        this.loadSelectStockOrder(this.query.order_id);
+        this.loadOrderDetails(this.query.order_id);
     },
 };
 </script>
