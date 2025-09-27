@@ -24,7 +24,7 @@
                 </el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button link type="primary">编辑</el-button>
+                        <el-button link type="primary" @click="onUpdateWarehouse(scope.row)">编辑</el-button>
                         <el-button link type="primary" @click="onPurview(scope.row)">授权</el-button>
                         <el-button link type="danger" @click="onDeleteWarehouse(scope.row)">删除</el-button>
                     </template>
@@ -36,6 +36,7 @@
         </el-card>
         <CreateWarehouse ref="CreateWarehouse" />
         <DeleteWarehouses ref="DeleteWarehouses" :vdata="deletearray" />
+        <UpdateWarehouse ref="UpdateWarehouse" />
         <Purview ref="Purview" />
     </div>
 </template>
@@ -43,6 +44,7 @@
 <script>
 import CreateWarehouse from "./create.vue";
 import DeleteWarehouses from "./delete.vue";
+import UpdateWarehouse from "./update.vue";
 import Purview from "./purview.vue";
 import pagination from "../../components/pagination/pagination.vue";
 import { Refresh } from "@element-plus/icons-vue";
@@ -51,7 +53,7 @@ import { GetWarehouses } from "../../api/index.js";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 export default {
     name: "HomeIndex",
-    components: { pagination, CreateWarehouse, DeleteWarehouses, Purview },
+    components: { pagination, CreateWarehouse, DeleteWarehouses, Purview, UpdateWarehouse },
     props: {},
     setup() {
         return {
@@ -104,6 +106,9 @@ export default {
             this.deletearray = [];
             this.deletearray.push(val);
             this.$refs.DeleteWarehouses.openDialog();
+        },
+        onUpdateWarehouse(val) {
+            this.$refs.UpdateWarehouse.openDialog(val);
         },
         onPurview(val) {
             this.$refs.Purview.openDialog(val);

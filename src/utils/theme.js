@@ -7,7 +7,7 @@ export function printTheme() {
         },
         signature: {
             enabled: false,
-            items: [],
+            items: [{ label: "仓库管理员", required: true }],
         },
     };
 }

@@ -18,7 +18,6 @@
 </template>
 
 <script>
-import { formatTime } from "../../utils/date.js";
 import { msgcon } from "../../utils/message.js";
 import { CreateWarehouses } from "../../api/index.js";
 export default {
@@ -48,9 +47,6 @@ export default {
         };
     },
     methods: {
-        formatDate(time) {
-            return formatTime(time);
-        },
         openDialog() {
             this.dialogVisible = true;
         },

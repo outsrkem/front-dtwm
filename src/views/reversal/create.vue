@@ -8,7 +8,7 @@
                 <p class="warning-desc">冲销操作说明：</p>
                 <p class="warning-desc">（1）入库：用负数冲销；出库：用正数冲销</p>
                 <p class="warning-desc">（2）原始单据项数目为0时不允许冲销。</p>
-                <p class="warning-desc">（3）冲销数额绝对值大于0且小于原始项数目之和的绝对值。</p>
+                <p class="warning-desc">（3）冲销数额绝对值大于0且小于等于原始项数目之和的绝对值。</p>
             </div>
             <div style="margin-bottom: 12px">
                 <el-descriptions border>
@@ -24,7 +24,7 @@
                 </el-descriptions>
             </div>
             <div>
-                <p>原因示例：录入错误：原录100件，实际收80件，冲销-20</p>
+                <p>原因示例：（1）入库录入错误：原录100件，实际收80件，冲销20; （2）出库录入错误：原录100件，实际出80件，冲销20</p>
             </div>
             <!-- 冲销表单 -->
             <el-form :model="fromdata" label-width="auto" :rules="fromRules" ref="rules-from">

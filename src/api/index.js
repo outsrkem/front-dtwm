@@ -16,18 +16,19 @@ const baseURL = "/api/dtwm";
 export const Resume = () => ajax(`${baseURL}/v1/resume`, "POST");
 
 // 查询仓库
-export const GetWarehouses = (params) => ajax(`${baseURL}/dtwm/warehouses`, "GET", params, null);
 // 新建仓库
-export const CreateWarehouses = (data) => ajax(`${baseURL}/dtwm/warehouses`, "POST", null, data);
 // 删除仓库
-export const DeleteWarehouses = (paths) => ajax(`${baseURL}/dtwm/warehouses/${paths.id}`, "DELETE", null, null);
-
-// 库存信息
+// 更新仓库 PUT /dtwm/warehouses/:warehouse_id
+// 根据Id获取仓库详情 GET /v1/warehouses/:warehouseId
+export const GetWarehouses = (params) => ajax(`${baseURL}/v1/warehouses`, "GET", params, null);
+export const GetWarehouseByID = (paths) => ajax(`${baseURL}/v1/warehouses/${paths.warehouse_id}`, "GET", null, null);
+export const CreateWarehouses = (data) => ajax(`${baseURL}/v1/warehouses`, "POST", null, data);
+export const DeleteWarehouses = (paths) => ajax(`${baseURL}/v1/warehouses/${paths.id}`, "DELETE", null, null);
+export const UpdateWarehouse = (paths, data) => ajax(`${baseURL}//v1/warehouses/${paths.warehouse_id}`, "PUT", null, data);
 
 // 出入库明细
-export const GetParticulars = (params) => ajax(`${baseURL}/v1/particulars`, "GET", params, null);
-
 // 查询单据
+export const GetParticulars = (params) => ajax(`${baseURL}/v1/particulars`, "GET", params, null);
 export const Getstockorder = (params) => ajax(`${baseURL}/v1/stockorder`, "GET", params, null);
 
 // h.POST("/v1/items", item.CreateItem())      // 创建物品 √
@@ -102,5 +103,7 @@ export const ListReversal = (params) => ajax(`${baseURL}/v1/reversal/list`, "GET
 export const CreateReversal = (paths, data) => ajax(`${baseURL}/v1/order/reversal/${paths.order_id}/${paths.detail_id}`, "POST", null, data);
 export const ExamineReversal = (paths, data) => ajax(`${baseURL}/v1/reversal/examine/${paths.detail_id}`, "POST", null, data);
 
-// h.GET("/v1/print/theme/:warehousesId", printcfg.GetPrintTheme())
-export const GetPrintTheme = (paths) => ajax(`${baseURL}/v1/print/theme/${paths.warehouses_id}`, "GET", null, null);
+// h.GET("/v1/report/theme/:warehousesId", printcfg.GetPrintTheme())
+export const GetPrintTheme = (paths) => ajax(`${baseURL}/v1/report/theme/${paths.warehouse_id}`, "GET", null, null);
+
+export const UpdateTheme = (paths, data) => ajax(`${baseURL}/v1/report/theme/${paths.warehouse_id}`, "PUT", null, data);

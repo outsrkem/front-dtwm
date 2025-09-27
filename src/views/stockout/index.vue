@@ -159,7 +159,7 @@ export default {
         },
         onPrint(val) {
             // 构建路由跳转的完整URL
-            const routeUrl = this.$router.resolve({
+            this.$router.push({
                 name: "eprint",
                 query: {
                     _type: val.type,
@@ -167,7 +167,6 @@ export default {
                     order_id: val.order_id,
                 },
             });
-            window.open(routeUrl.href, "_blank");
         },
         onLookParticulars(val) {
             this.$router.push({ name: "particulars", query: { serial: val.serial } });

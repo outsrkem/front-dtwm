@@ -1,9 +1,10 @@
 <template>
-    <div>
+    <div style="margin-bottom: 50px">
         <!-- 固定顶部的横条 -->
         <div class="print-header">
             <el-space>
                 <button @click="goBack()">返回</button>
+                <button @click="onSetPrintCfg()">设置</button>
                 <button @click="onRefresh()">刷新</button>
                 <button @click="handlePrint()">打印</button>
             </el-space>
@@ -16,7 +17,8 @@
                 <div class="print-template pdf-page" style="padding: 5px">
                     <!-- 主标题：根据类型切换 -->
                     <div class="head-title">
-                        <p>{{ printTheme.title.main }}</p>
+                        <p class="main-title">{{ printTheme.title.main }}</p>
+                        <p class="sub-title">{{ printTheme.title.sub }}</p>
                     </div>
 
                     <div style="margin-bottom: 5px; display: flex; justify-content: space-between">
@@ -98,7 +100,9 @@
                     <div style="margin-right: 20px" v-if="printTheme.signature.enabled">
                         <div style="display: flex; flex-direction: column; align-items: flex-end; width: 100%">
                             <span v-for="val in printTheme.signature.items">
-                                <p style="padding-top: 40px">{{ val.label }}：______________________</p>
+                                <span v-if="val.required">
+                                    <p style="padding-top: 35px">{{ val.label }}：______________________</p>
+                                </span>
                             </span>
                         </div>
                     </div>
@@ -225,9 +229,9 @@ export default {
                 }
             }
         },
-        isTimestampOver(timestamp) {
-            // 判断毫秒时间戳是否超过当前时间5分钟,超过输出：true
-            return dayjs().diff(dayjs(timestamp), "minute") > 5;
+        isTimestampOver(timestamp, timeThreshold = 1) {
+            // 判断毫秒时间戳是否超过当前时间指定分钟数，超过返回true
+            return dayjs().diff(dayjs(timestamp), "minute") > timeThreshold;
         },
         eprint() {
             this.loading = true;
@@ -237,9 +241,19 @@ export default {
             if (this.query.type === "IN") this.$router.push({ name: "stockin" });
             if (this.query.type === "OUT") this.$router.push({ name: "stockout" });
         },
+        // 跳转打印配置页面
+        onSetPrintCfg() {
+            this.$router.push({
+                name: "warehousePrintTheme",
+                query: {
+                    warehouse_id: this.query.warehouse_id,
+                    _s: this.$route.fullPath,
+                },
+            });
+        },
         handlePrint() {
-            if (this.isTimestampOver(this.resTime)) {
-                // 如果数据时5分钟前加载的，就拒绝打印
+            if (this.isTimestampOver(this.resTime, 1)) {
+                // 如果数据时1分钟前加载的，就拒绝打印
                 this.$message.warning(msgcon("当前数据已超时，请刷新后再打印"));
                 return;
             }
@@ -275,8 +289,8 @@ export default {
                 });
         },
         // 获取打印主题
-        loadGetPrintTheme: function (warehouses_id) {
-            const paths = { warehouses_id: warehouses_id };
+        loadGetPrintTheme: function (warehouse_id) {
+            const paths = { warehouse_id: warehouse_id };
             GetPrintTheme(paths)
                 .then((res) => {
                     if (this.query.type === "IN") {
@@ -313,6 +327,22 @@ export default {
 </script>
 
 <style scoped>
+.head-title {
+    p {
+        text-align: center;
+    }
+    .main-title {
+        font-size: 20px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .sub-title {
+        font-size: 15px;
+        margin: 0;
+        margin-top: 5px;
+    }
+}
+
 p {
     font-size: 14px;
     margin: 0px;
@@ -328,6 +358,7 @@ table {
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
+
 td {
     padding: 8px 12px;
     text-align: left;
@@ -378,6 +409,8 @@ td {
 
 /* 内容容器 */
 .print-content-wrapper {
+    /* 上边距，防止打印出来太靠顶 */
+    margin-top: 30px;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -390,13 +423,6 @@ td {
     box-sizing: border-box;
     position: relative;
     background-color: white;
-}
-.head-title {
-    p {
-        font-size: 18px;
-        text-align: center;
-        font-weight: bold;
-    }
 }
 
 /* 打印样式：固定横条依然隐藏，不影响打印内容 */

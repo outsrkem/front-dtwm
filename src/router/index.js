@@ -16,6 +16,7 @@ const InWarehouse = () => import("../views/stockin/inwarehouse.vue");
 const OutWarehouse = () => import("../views/stockout/outwarehouse.vue");
 const Supplier = () => import("../views/supplier/index.vue");
 const PrintPage = () => import("../views/printmp/printmp.vue"); // 打印页面
+const WarehousePrintTheme = () => import("../views/warehouse/theme.vue");
 
 const MobileHome = () => import("../mobile/views/home/index.vue");
 const MobileLayout = () => import("../mobile/layout/index.vue");
@@ -48,6 +49,7 @@ const routes = [
             { meta: { title: "出入库明细" }, path: "/particulars", name: "particulars", component: Particulars },
             { meta: { title: "单据红冲" }, path: "/order/reversal/:oid", name: "ReversalApplication", component: ReversalApplication },
             { meta: { title: "仓库信息" }, path: "/warehouse", name: "warehouse", component: Warehouse },
+            { meta: { title: "仓库信息" }, path: "/warehouse/theme", name: "warehousePrintTheme", component: WarehousePrintTheme },
             { meta: { title: "物品管理" }, path: "/items", name: "items", component: loadComponent(Items, MItems) },
             { meta: { title: "客户管理" }, path: "/supplier", name: "supplier", component: Supplier },
             { meta: { title: "红冲管理" }, path: "/reversal", name: "reversalIdx", component: ReversalIdx },
