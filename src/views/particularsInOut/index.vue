@@ -34,6 +34,7 @@
                                 <el-option v-for="(option, index) in query.statusOptions" :key="index" :label="option.label" :value="option.value" />
                             </el-select>
                             <el-input v-model="query.serial" style="width: 340px" placeholder="输入业务单据" clearable @clear="onSearch()" />
+                            <el-input v-model="query.name" style="width: 180px" placeholder="物品名称(模糊搜索)" clearable @clear="onSearch()" />
                             <el-button :icon="Search" type="success" @click="onSearch()" :loading="loading">检索</el-button>
                             <el-button type="primary" :icon="Refresh" @click="onRefresh()" :loading="loading">刷新</el-button>
                         </el-space>
@@ -124,6 +125,7 @@ export default {
                     id: "",
                 },
                 direction: "", // in/out
+                name: "", // 物品名称，模糊搜索
             },
             warehouses: [],
             loadingWarehouses: false,
@@ -141,6 +143,7 @@ export default {
             if (this.query.status !== "") params.status = this.query.status;
             if (this.query.warehouses.id !== "") params = { wd: this.query.warehouses.id, ...params };
             if (this.query.direction !== "") params = { direction: this.query.direction, ...params };
+            if (this.query.name !== "") params = { name: this.query.name, ...params };
             withDelay(() => GetParticulars(params))
                 .then((res) => {
                     this.particularsdata = res.payload.items;

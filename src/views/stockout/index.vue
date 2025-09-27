@@ -52,9 +52,16 @@
                                 <el-button link type="primary">更多</el-button>
                                 <template #dropdown>
                                     <el-dropdown-menu>
-                                        <el-dropdown-item>
-                                            <el-button link type="primary" @click="onReversal(scope.row)">红冲</el-button>
-                                        </el-dropdown-item>
+                                        <div v-if="scope.row.status === 'COMPLETED'">
+                                            <el-dropdown-item>
+                                                <el-button link type="primary" @click="onReversal(scope.row)">红冲</el-button>
+                                            </el-dropdown-item>
+                                        </div>
+                                        <div v-if="scope.row.status === 'PENDING'">
+                                            <el-dropdown-item>
+                                                <el-button link type="primary" @click="onUpdateOrder(scope.row)">编辑</el-button>
+                                            </el-dropdown-item>
+                                        </div>
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
@@ -177,6 +184,9 @@ export default {
                 params: { oid: val.order_id },
                 query: { _b: "o" },
             });
+        },
+        onUpdateOrder(val) {
+            this.$router.push({ name: "editOutWarehouse", query: { order_id: val.order_id } });
         },
     },
     created() {

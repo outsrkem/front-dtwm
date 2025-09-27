@@ -1,409 +1,403 @@
 <template>
-    <div>
-        <el-card class="box-card">
-            <template #header>
-                <div class="my_refresh">
-                    <div>
-                        <span>创建出库单</span>
-                        <span style="padding-left: 5px; padding-right: 5px"></span>
-                    </div>
-                </div>
-            </template>
-            <div v-if="!result" v-loading="basic.loading">
-                <el-form label-position="left" :inline="true" ref="basic" :rules="rules" label-width="auto" :model="basic" class="form-inline">
-                    <el-form-item label="出库类型" prop="classification">
-                        <el-select v-model="basic.classification" placeholder="选择出库类型" clearable filterable>
-                            <el-option v-for="(item, inx) in classification" :id="inx" :label="item.name" :value="item.id" />
-                        </el-select>
-                    </el-form-item>
-                    <el-form-item label="出库仓库" prop="warehouses">
-                        <el-select v-model="basic.warehouses" placeholder="选择仓库" clearable filterable>
-                            <el-option v-for="(item, inx) in warehouses" :id="inx" :label="item.name" :value="item.id" />
-                        </el-select>
-                    </el-form-item>
-                    <el-form-item label="领用单位/人" prop="supplier">
-                        <el-space>
-                            <el-select v-model="basic.supplier" placeholder="请选择" clearable filterable>
-                                <el-option v-for="(item, inx) in supplier" :id="inx" :label="item.name" :value="item.id">
-                                    <span style="float: left">{{ item.name }}</span>
-                                    <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px"> {{ item.person }}</span>
-                                </el-option>
-                            </el-select>
-                            <el-button style="font-size: 19px; padding-left: 8px; padding-right: 8px" :icon="Refresh" @click="onRefreshBasicData" />
-                        </el-space>
-                    </el-form-item>
-                </el-form>
-
-                <div style="width: 100%">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="min-width: 20px"></th>
-                                <th><el-text>仓库</el-text></th>
-                                <th><el-text>名称</el-text></th>
-                                <th><el-text>属性</el-text></th>
-                                <th><el-text>规格</el-text></th>
-                                <th><el-text>单位</el-text></th>
-                                <th><el-text>总库存</el-text></th>
-                                <th><el-text>已锁定</el-text></th>
-                                <th><el-text>可用库存</el-text></th>
-                                <th><el-text>本次出库数量</el-text></th>
-                                <th><el-text>操作</el-text></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(item, inx) in basic.items">
-                                <td>{{ inx + 1 }}</td>
-                                <td>{{ item.warehouse.name }}</td>
-                                <td>{{ item.name }}</td>
-                                <td>{{ item.property }}</td>
-                                <td>{{ item.specification }}</td>
-                                <td>{{ item.unit }}</td>
-                                <td>{{ item.current }}</td>
-                                <td>{{ item.lock }}</td>
-                                <td>{{ item.available }}</td>
-                                <td><el-input v-model="basic.items[inx].quantity" placeholder="数据范围: (0, 999999.9999], 最大保留4位小数" /></td>
-                                <td><el-button link type="primary" @click="onRemoveItemlist(inx)">移除</el-button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div style="padding-top: 10px; padding-left: 10px">
-                        <el-button type="primary" link :icon="Plus" @click="onOpenAdditem">添加物品</el-button>
-                    </div>
-                </div>
-                <div style="padding-top: 10px">
-                    <el-form label-position="left" label-width="auto" :model="basic">
-                        <el-form-item label="备注" label-position="left">
-                            <el-input v-model="basic.remark" maxlength="128" show-word-limit />
-                        </el-form-item>
-                    </el-form>
-                </div>
-                <div>
-                    <el-button bg text @click="onCancel" style="width: 120px">取消</el-button>
-                    <el-button type="primary" @click="onSubmitItemOutWarehouse" style="width: 120px">提交</el-button>
-                </div>
-            </div>
-            <div v-else>
-                <el-result icon="success" title="创建成功">
-                    <template #extra>
-                        <el-button style="width: 120px" type="primary" @click="onCancel">确定</el-button>
-                    </template>
-                </el-result>
-            </div>
-
-            <!--选择物品  -->
-            <el-dialog v-model="selectItem.dialogVisible" width="1200" title="选择物品" draggable>
-                <div>
-                    <div>
-                        <el-input style="width: 340px" v-model="query.item.name" placeholder="按名称搜索数据" clearable @change="onSearch()">
-                            <template #prefix>
-                                <el-icon class="el-input__icon"><search /></el-icon>
-                            </template>
-                        </el-input>
-                    </div>
-                </div>
-                <div>
-                    <el-table :data="items" style="width: 100%" @selection-change="handleSelectionChange" v-loading="loading">
-                        <el-table-column type="selection" :selectable="selectable" width="55" />
-                        <el-table-column prop="warehouse.name" label="仓库" show-overflow-tooltip />
-                        <el-table-column prop="name" label="名称" show-overflow-tooltip />
-                        <el-table-column prop="available" label="可用库存" show-overflow-tooltip />
-                        <el-table-column prop="property" label="属性" show-overflow-tooltip />
-                        <el-table-column prop="specification" label="规格" show-overflow-tooltip />
-                        <el-table-column prop="unit" label="规格" show-overflow-tooltip />
-                    </el-table>
-                </div>
-                <div class="pagination">
-                    <div style="display: flex; justify-content: space-between">
-                        <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
-                        <span>
-                            <el-button style="width: 120px" bg text @click="onCloseItem">取消</el-button>
-                            <el-button style="width: 120px" type="primary" @click="onAddItemTolist">确定</el-button>
-                        </span>
-                    </div>
-                </div>
-            </el-dialog>
-        </el-card>
-    </div>
+    <StockForm
+        direction="out"
+        title="创建出库单"
+        :labels="formLabels"
+        :classifications="classification"
+        :warehouses="warehouses"
+        :suppliers="supplier"
+        :items="items"
+        :pageTotal="pageTotal"
+        :pageSize="pageSize"
+        :currentPage="page"
+        :formData="basic"
+        :loading="loading"
+        :selectItem="selectItem"
+        :query="query"
+        :rules="rules"
+        :result="result"
+        :formRef="formRef"
+        :selectedItemIds="getSelectedItemIds()"
+        @formInstance="handleFormInstance"
+        @submit="onSubmitItemOutWarehouse"
+        @cancel="onCancel"
+        @refresh="onRefreshBasicData"
+        @removeItem="onRemoveItemlist"
+        @openAddItem="onOpenAdditem"
+        @closeItem="onCloseItem"
+        @search="onSearch"
+        @pageChange="onCurrentChange"
+        @sizeChange="onSizeChange"
+        @addSelectedItems="onAddItemTolist"
+        @selectionChange="handleSelectionChange" />
 </template>
 
 <script lang="ts">
-import { Plus, Refresh } from "@element-plus/icons-vue";
-import { formatTime } from "../../utils/date.js";
-import { msgcon } from "../../utils/message.js";
-import pagination from "../../components/pagination/pagination.vue";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { SelectInventory, ItemOutWarehouse, GetClassification, GetWarehouses, ListSuppliers } from "../../api/index.js";
+import StockForm from "../../components/stock/StockForm.vue";
+import { msgcon } from "../../utils/message.js";
+
 export default {
-    name: "OutWarehouseIndex",
-    components: { pagination },
-    props: {},
-    setup() {
-        return {
-            Plus,
-            Refresh,
-        };
-    },
+    name: "OutWarehouseContainer",
+    components: { StockForm },
     data() {
         return {
-            result: false, // 控制展示页面
+            result: false,
             loading: false,
-            selectItem: {
-                loading: true,
-                dialogVisible: false,
+            // 表单内所有文本标签的定义，便于国际化和统一修改
+            formLabels: {
+                classification: "出库类型",
+                warehouse: "出库仓库",
+                supplier: "领用单位/人",
+                remark: "出库备注",
+                tableTotalStock: "总库存",
+                tableLockedStock: "已锁定",
+                tableQuantity: "本次出库数量",
+                addItemButton: "添加出库物品",
+                submitButton: "创建出库单",
+                successTitle: "出库单创建成功",
+                selectItemTitle: "选择出库物品",
+                tableWarehouse: "仓库",
+                tableName: "物品名称",
+                tableAvailableStock: "可用库存",
+                tableProperty: "属性",
+                tableSpecification: "规格",
+                tableUnit: "单位",
+                tableStatus: "状态",
+                tableOperation: "操作",
+                removeButton: "移除",
+                tableUpdateTime: "更新时间",
+                searchPlaceholder: "输入物品名称搜索",
+                cancelButton: "取消",
+                confirmButton: "确定",
             },
-            initem: [],
-            pageTotal: 0,
-            pageSize: 10,
-            page: 1,
-            items: [] as Item[],
-            basic: {
-                loading: false, // 创建时置为true
-                classification: "", // 选择的类型
-                warehouses: "", // 选择的仓库
-                items: [], // 选择的物品
-                remark: "", // 备注信息
-            },
-            data: [],
-            classification: [], // 出库类型数据
-            warehouses: [], // 仓库数据
-            selectedRows: [] as Item[],
-            supplier: [], // 供应商
-            query: {
-                item: {
-                    name: "",
-                },
-                warehouse: {
-                    id: "",
-                },
-            },
+            // 表单验证规则
             rules: {
-                classification: [{ required: true, message: "必选", trigger: "change" }],
-                warehouses: [{ required: true, message: "必选", trigger: "change" }],
-                supplier: [{ required: true, message: "必选", trigger: "change" }],
+                classification: [{ required: true, message: "请选择出库类型", trigger: "change" }],
+                warehouses: [{ required: true, message: "请选择出库仓库", trigger: "change" }],
+                supplier: [{ required: true, message: "请选择领用单位/人", trigger: "change" }],
             },
+            // 选择物品弹窗的状态
+            selectItem: {
+                loading: true, // 弹窗内加载状态
+                dialogVisible: false, // 弹窗显示/隐藏
+            },
+            pageTotal: 0, // 分页总条数
+            pageSize: 10, // 每页显示条数
+            page: 1, // 当前页码
+            items: [], // 可选物品列表（从接口获取）
+            // 表单核心数据
+            basic: {
+                loading: false, // 表单提交加载状态
+                classification: "", // 选中的出库类型ID
+                warehouses: "", // 选中的仓库ID
+                supplier: "", // 选中的领用单位/人ID
+                items: [], // 已选择的出库物品列表
+                remark: "", // 出库备注
+            },
+            classification: [], // 出库类型数据列表
+            warehouses: [], // 仓库数据列表
+            selectedRows: [], // 弹窗中选中的物品行
+            supplier: [], // 领用单位/人数据列表
+            // 查询条件
+            query: {
+                item: { name: "" }, // 物品名称搜索
+            },
+            elFormInstance: null, // 表单实例引用
+            formRef: "stockOutForm", // 表单引用标识
         };
     },
-    methods: {
-        formatDate(time) {
-            return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
-        },
-        onCurrentChange(p) {
-            this.page = p;
-            this.loadSelectInventory(this.pageSize, p);
-        },
-        onSizeChange(s) {
-            this.pageSize = s;
-            this.page = 1;
-            this.loadSelectInventory(s, 1);
-        },
-        // 打开选择物品弹窗
-        onOpenAdditem() {
-            this.query.item.name = "";
-            this.selectItem.dialogVisible = true;
-            this.loadSelectInventory(this.pageSize, this.page);
-        },
-        // 关闭选择物品弹窗
-        onCloseItem() {
-            this.selectItem.dialogVisible = false;
-        },
-        // 将选择的物品添加到表格
-        onAddItemTolist() {
-            this.basic.items = this.basic.items.concat(this.selectedRows);
-            this.selectItem.dialogVisible = false;
-        },
-        onRemoveItemlist(inx) {
-            if (inx >= 0 && inx < this.basic.items.length) {
-                this.basic.items.splice(inx, 1);
-            } else {
-                console.warn(`无效的索引：${inx}，无法移除元素`);
+    watch: {
+        // 监听仓库变化，当仓库改变且弹窗打开时，重新加载库存物品
+        "basic.warehouses"(newVal) {
+            if (newVal && this.selectItem.dialogVisible) {
+                this.loadSelectInventory(this.pageSize, this.page);
             }
         },
-        // 控制多选框否可以勾选 boolean
-        selectable(row: Item) {
-            const isExist = this.basic.items.some((item) => item.id === row.id);
-            return !isExist;
+        // 监听已选物品变化，当物品列表变化且弹窗打开时，刷新禁用状态
+        "basic.items"(newVal) {
+            if (this.selectItem.dialogVisible) {
+                // 通过解构赋值触发列表重新渲染，更新禁用状态
+                this.items = [...this.items];
+            }
         },
-        // 暂存选择的数据
-        handleSelectionChange(selection) {
-            this.selectedRows = selection; // 更新选中项
+    },
+    mounted() {
+        // 组件挂载后加载初始数据
+        this.loadInitialData();
+    },
+    methods: {
+        // 获取已选物品的ID列表，用于子组件判断是否禁用已选物品
+        getSelectedItemIds() {
+            return this.basic.items.map((item) => item.id);
         },
-        // 获取出库类型
-        loadGetClassification: function () {
-            GetClassification({ t: "out" }).then((res) => {
-                this.classification = res.payload.items;
-            });
+
+        // 加载初始数据：分类、仓库、领用单位/人
+        loadInitialData() {
+            this.loadGetClassification();
+            this.loadGetWarehouses();
+            this.loadListSuppliers();
+            // 通知全局总线更新当前活跃路径
+            this.$globalBus.emit("updateActivePath", "/stockout");
         },
-        // 获取仓库
-        loadGetWarehouses: function () {
-            let params = { ...convertToLimitOffset(1, 100) };
-            GetWarehouses(params).then((res) => {
-                this.warehouses = res.payload.items;
-            });
+
+        // 处理表单实例，保存到本地变量
+        handleFormInstance(instance) {
+            this.elFormInstance = instance;
+            console.log("获取到 el-form 实例:", this.elFormInstance);
         },
-        // 获取供应商
-        loadListSuppliers: function () {
-            let params = convertToLimitOffset(1, 100);
-            ListSuppliers(params).then((res) => {
-                this.supplier = res.payload.items;
-            });
+
+        // 加载出库类型数据
+        loadGetClassification() {
+            GetClassification()
+                .then((res) => {
+                    this.classification = res.payload.items;
+                })
+                .catch((err) => {
+                    console.error("加载分类数据失败:", err);
+                    this.$message.error(msgcon("加载分类数据失败"));
+                });
         },
-        // 加载物品库存
-        loadSelectInventory: function (page_size, page) {
+
+        // 加载仓库数据
+        loadGetWarehouses() {
+            GetWarehouses()
+                .then((res) => {
+                    this.warehouses = res.payload.items;
+                })
+                .catch((err) => {
+                    console.error("加载仓库数据失败:", err);
+                    this.$message.error(msgcon("加载仓库数据失败"));
+                });
+        },
+
+        // 加载领用单位/人数据（复用了supplier变量名）
+        loadListSuppliers() {
+            // 调用接口，获取第1页，100条数据
+            ListSuppliers(convertToLimitOffset(1, 100))
+                .then((res) => {
+                    this.supplier = res.payload.items;
+                })
+                .catch((err) => {
+                    console.error("加载客户数据失败:", err);
+                    this.$message.error(msgcon("加载客户数据失败"));
+                });
+        },
+
+        // 加载库存物品数据（出库特有，需要关联仓库）
+        loadSelectInventory(page_size, page) {
+            // 验证仓库是否已选择，未选择则清空列表
+            if (!this.basic.warehouses) {
+                this.items = [];
+                this.pageTotal = 0;
+                return;
+            }
+
             this.loading = true;
-            let params = { ...convertToLimitOffset(page, page_size) };
-            if (this.query.item.name !== "") params = { name: this.query.item.name, ...params };
-            if (this.basic.warehouses !== "") params = { wd: this.basic.warehouses, ...params };
+            // 构建请求参数：分页信息 + 仓库ID
+            const params = {
+                ...convertToLimitOffset(page, page_size),
+                wd: this.basic.warehouses,
+            };
+
+            // 如果有搜索关键词，添加到参数中
+            if (this.query.item.name) Object.assign(params, { name: this.query.item.name });
+
+            // 调用接口获取库存物品列表，withDelay用于添加延迟避免频繁请求
             withDelay(() => SelectInventory(params))
                 .then((res) => {
                     this.items = res.payload.items;
                     this.pageTotal = res.payload.page_info.total;
                 })
+                .catch((err) => {
+                    console.error("加载库存物品数据失败:", err);
+                    this.$message.error(msgcon("加载库存物品数据失败"));
+                })
                 .finally(() => {
-                    this.loading = false;
+                    this.loading = false; // 无论成功失败，结束加载状态
                 });
         },
+
+        // 处理页码变化
+        onCurrentChange(p) {
+            this.page = p;
+            this.loadSelectInventory(this.pageSize, p);
+        },
+
+        // 处理每页条数变化
+        onSizeChange(s) {
+            this.pageSize = s;
+            this.page = 1; // 重置到第1页
+            this.loadSelectInventory(s, 1);
+        },
+
+        // 打开添加物品弹窗
+        onOpenAdditem() {
+            // 验证仓库是否已选择，未选择则提示
+            if (!this.basic.warehouses) {
+                this.$message.warning(msgcon("请先选择出库仓库"));
+                return;
+            }
+            // 重置搜索条件，显示弹窗，加载物品列表
+            this.query.item.name = "";
+            this.selectItem.dialogVisible = true;
+            this.loadSelectInventory(this.pageSize, this.page);
+        },
+
+        // 关闭添加物品弹窗
+        onCloseItem() {
+            this.selectItem.dialogVisible = false;
+        },
+
+        // 处理选择项变化，保存选中的行
+        handleSelectionChange(rows) {
+            this.selectedRows = rows;
+        },
+
+        // 添加选中的物品到已选列表
+        onAddItemTolist() {
+            // 验证是否有选中物品
+            if (!this.selectedRows.length) {
+                this.$message.warning(msgcon("请选择物品"));
+                return;
+            }
+
+            // 过滤掉已存在的物品，避免重复添加
+            const existingIds = this.basic.items.map((item) => item.id);
+            const newItems = this.selectedRows.filter((item) => !existingIds.includes(item.id)).map((item) => ({ ...item, quantity: "" })); // 初始化数量为空
+
+            // 添加新物品到已选列表，关闭弹窗
+            this.basic.items.push(...newItems);
+            this.selectItem.dialogVisible = false;
+        },
+
+        // 从已选列表中移除物品
+        onRemoveItemlist(index) {
+            this.basic.items.splice(index, 1);
+        },
+
         // 搜索物品
         onSearch() {
-            this.page = 1;
-            if (this.query.serial != "") this.loadSelectInventory(this.pageSize, 1);
-            else this.$message.warning(msgcon("请输出检索条件"));
+            this.page = 1; // 搜索时重置到第1页
+            if (this.query.item.name) {
+                this.loadSelectInventory(this.pageSize, 1);
+            } else {
+                this.$message.warning(msgcon("请输入检索条件"));
+            }
         },
-        // 出库操作
-        loadOutStock: function () {
-            this.basic.loading = true;
-            const items = this.basic.items.map((item) => ({ id: item.id, quantity: item.quantity }));
-            // 将处理后的数组赋值
-            const data = {
-                warehouse: { id: this.basic.warehouses },
-                classification: { id: this.basic.classification },
-                supplier: { id: this.basic.supplier },
-                item: items,
-                remark: this.basic.remark,
-            };
-            withDelay(() => ItemOutWarehouse(data))
-                .then(() => {
-                    this.result = true;
-                })
-                .catch((err) => {
-                    this.$message.warning(msgcon("创建失败" + err.data));
-                })
-                .finally(() => {
-                    this.basic.loading = false;
-                });
-        },
-        // 验证基本表单
+
+        // 验证基础表单（出库类型、仓库、领用单位）
         async valiBasicForm() {
-            return new Promise((resolve) => {
-                this.$refs["basic"].validate((valid) => {
-                    resolve(valid);
-                });
-            });
+            // 验证表单实例是否存在
+            if (!this.elFormInstance) {
+                this.$message.error(msgcon("表单实例未加载，请稍后重试"));
+                console.error("valiBasicForm: elFormInstance 为 null");
+                return false;
+            }
+
+            try {
+                // 调用表单验证方法
+                await this.elFormInstance.validate();
+                console.log("表单验证通过");
+                return true;
+            } catch (error) {
+                console.log("表单验证失败:", error);
+                return false;
+            }
         },
-        // 验证出库表单
+
+        // 验证出库物品表单（数量合理性等）
         async valiItemOutWarehouseForm() {
             return new Promise((resolve) => {
-                // 检查是否添加了物品
-                if (this.basic.items.length === 0) {
-                    this.$message.warning(msgcon("请至少添加一个物品"));
+                // 验证是否添加了物品
+                if (!this.basic.items.length) {
+                    this.$message.warning(msgcon("请添加物品"));
                     resolve(false);
                     return;
                 }
 
-                // 检查每个物品的出库数量是否有效
+                // 验证每个物品的出库数量是否合理
                 for (let i = 0; i < this.basic.items.length; i++) {
                     const item = this.basic.items[i];
-                    // 验证数量是否为空
-                    if (item.quantity === undefined || item.quantity === null || item.quantity === "") {
-                        this.$message.warning(msgcon(`第${i + 1}个物品的出库数量不能为空`));
-                        resolve(false);
-                        return;
-                    }
-
-                    // 验证数量是否为有效数字
                     const quantity = Number(item.quantity);
+
+                    // 验证是否为有效正数
                     if (isNaN(quantity) || quantity <= 0) {
                         this.$message.warning(msgcon(`第${i + 1}个物品的出库数量必须是大于0的数字`));
                         resolve(false);
                         return;
                     }
-                    const available = Number(item.available);
-                    if (quantity > available) {
-                        this.$message.warning(msgcon(`第${i + 1}个物品的出库数量超过现有库存`));
+
+                    // 验证是否超过可用库存
+                    if (quantity > item.available) {
+                        this.$message.warning(msgcon(`第${i + 1}个物品的出库数量超过可用库存`));
                         resolve(false);
                         return;
                     }
                 }
+
+                // 所有验证通过
                 resolve(true);
             });
         },
-        // 提交出库
+
+        // 提交出库单
         async onSubmitItemOutWarehouse() {
-            const basic = await this.valiBasicForm();
-            if (!basic) return;
+            // 先验证基础表单
+            const basicValid = await this.valiBasicForm();
+            if (!basicValid) return;
+
+            // 再验证物品和数量
             const stockValid = await this.valiItemOutWarehouseForm();
             if (!stockValid) return;
-            this.loadOutStock();
+
+            // 所有验证通过，执行出库操作
+            if (basicValid && stockValid) {
+                this.loadItemOutWarehouse();
+            }
         },
-        // 取消出库
+
+        // 执行出库操作（调用接口）
+        loadItemOutWarehouse() {
+            this.basic.loading = true; // 显示提交加载状态
+            // 构建请求数据格式
+            const items = this.basic.items.map((item) => ({ id: item.id, quantity: item.quantity }));
+            const data = {
+                warehouse: { id: this.basic.warehouses },
+                classification: { id: this.basic.classification },
+                supplier: { id: this.basic.supplier }, // 实际是领用单位/人ID
+                item: items,
+                remark: this.basic.remark,
+            };
+
+            // 调用出库接口
+            withDelay(() => ItemOutWarehouse(data))
+                .then(() => {
+                    this.result = true; // 标记操作成功
+                })
+                .catch((err) => {
+                    // 提取错误信息并显示
+                    let msg = err.data.metadata.message;
+                    this.$message.error(msgcon("创建出库单失败" + msg));
+                })
+                .finally(() => {
+                    this.basic.loading = false; // 无论成功失败，结束加载状态
+                });
+        },
+
+        // 取消操作，返回出库单列表页
         onCancel() {
             this.$router.push({ name: "stockout" });
         },
+
+        // 刷新基础数据（分类、仓库、领用单位）
         onRefreshBasicData() {
-            this.$message.success(msgcon("刷新数据"));
             this.loadGetClassification();
             this.loadGetWarehouses();
             this.loadListSuppliers();
+            this.$message.success(msgcon("数据已刷新"));
         },
-    },
-    created() {
-        this.loadGetClassification();
-        this.loadGetWarehouses();
-        this.loadListSuppliers();
-        this.$globalBus.emit("updateActivePath", "/stockout");
     },
 };
 </script>
-
-<style scoped>
-.form-inline .el-input {
-    --el-input-width: 230px;
-}
-
-.form-inline .el-select {
-    --el-select-width: 230px;
-}
-.subform-row {
-    display: flex;
-    background: #f0f1f4;
-    height: 30px;
-    border: 1px solid #d9dadb;
-}
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 0px auto;
-    border: 1px solid #ddd;
-}
-
-th,
-td {
-    border: 1px solid #ddd;
-    padding: 5px;
-    text-align: left;
-}
-
-th {
-    height: 35px;
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-tr:hover {
-    background-color: #edf9f1;
-}
-</style>

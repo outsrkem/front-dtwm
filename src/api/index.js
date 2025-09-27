@@ -26,9 +26,7 @@ export const CreateWarehouses = (data) => ajax(`${baseURL}/v1/warehouses`, "POST
 export const DeleteWarehouses = (paths) => ajax(`${baseURL}/v1/warehouses/${paths.id}`, "DELETE", null, null);
 export const UpdateWarehouse = (paths, data) => ajax(`${baseURL}//v1/warehouses/${paths.warehouse_id}`, "PUT", null, data);
 
-// 出入库明细
-// 查询单据
-export const GetParticulars = (params) => ajax(`${baseURL}/v1/particulars`, "GET", params, null);
+// 出入库单据列表
 export const Getstockorder = (params) => ajax(`${baseURL}/v1/stockorder`, "GET", params, null);
 
 // h.POST("/v1/items", item.CreateItem())      // 创建物品 √
@@ -53,7 +51,7 @@ export const UpdateItem = (paths, data) => ajax(`${baseURL}/v1/item/${paths.id}`
 // h.POST("/v1/electronic-flow/review", flow.ReviewFlow()); // 审理电子流 √
 // h.GET("/v1/stockorder", stockorder.SelectStockOrder()); // 查询单据列表 √
 // h.GET("/v1/stock/order/:orderId", stockorder.SelectOrderDetails()); // 查询出入库单据详情 √
-// h.GET("/v1/particulars", particulars.OutInParticulars()); // 出入库明细 √
+// h.GET("/v1/particulars", particulars.OutInParticulars()); // 出入库流水明细 √
 // h.GET("/v1/inventory", inventory.SelectInventory()); // 查询物品库存 √
 // h.GET("/v1/classification", classification.SelectClassification()); // 查询进出库类型 √
 export const InStock = (data) => ajax(`${baseURL}/v1/stock/in`, "POST", null, data);
@@ -61,8 +59,12 @@ export const ItemOutWarehouse = (data) => ajax(`${baseURL}/v1/stock/out`, "POST"
 export const GetClassification = (params) => ajax(`${baseURL}/v1/classification`, "GET", params, null);
 export const ReviewFlow = (data) => ajax(`${baseURL}/v1/electronic-flow/review`, "POST", null, data);
 export const GetOrderDetails = (paths) => ajax(`${baseURL}/v1/stock/order/${paths.order_id}`, "GET", null, null);
+export const GetParticulars = (params) => ajax(`${baseURL}/v1/particulars`, "GET", params, null);
 export const SelectInventory = (params) => ajax(`${baseURL}/v1/inventory`, "GET", params, null);
 export const SelectStockOrder = (params) => ajax(`${baseURL}//v1/stockorder`, "GET", params, null);
+
+// 更新出入库单据信息和出入库物品数目
+export const UpdateOrder = (paths, data) => ajax(`${baseURL}/v1/stock/order/${paths.order_id}`, "PUT", null, data);
 
 // h.POST("/v1/supplier", supplier.CreateSupplier())               // 创建供应商 √
 // h.GET("/v1/supplier/:id", supplier.GetSupplierByID())           // 根据ID获取供应商详情 √
@@ -83,7 +85,7 @@ export const DeleteSupplier = (paths) => ajax(`${baseURL}/v1/supplier/${paths.id
 export const DisableSupplier = (paths) => ajax(`${baseURL}/v1/supplier/${paths.id}/disable`, "PATCH", null, null);
 export const EnableSupplier = (paths) => ajax(`${baseURL}/v1/supplier/${paths.id}/enable`, "PATCH", null, null);
 
-// h.GET("/v1/overview/stock", apc("dtwm:overview:listPreview"), overview.StockEarly()) // 数据统计
+// 数据统计
 export const StockEarly = (params) => ajax(`${baseURL}/v1/overview/stock`, "GET", params, null);
 
 // h.GET("/v1/user", apc("dtwm:user:list"), core.ListUser()); // 获取用户列表,搜索用户

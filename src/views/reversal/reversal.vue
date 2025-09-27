@@ -59,6 +59,9 @@
                         </template>
                     </el-table-column>
                 </el-table>
+                <div class="pagination">
+                    <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
+                </div>
             </div>
         </el-card>
         <CreateReversal ref="CreateReversal" />
@@ -67,15 +70,16 @@
 
 <script>
 import CreateReversal from "./create.vue";
+import pagination from "../../components/pagination/pagination.vue";
 import { Refresh, ArrowLeft } from "@element-plus/icons-vue";
-import { withDelay } from "../../utils/common.js";
+import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { formatTime } from "../../utils/date.js";
 import { GetOrderDetails, GetParticulars } from "../../api/index.js";
 import { getSuatusOption } from "../../utils/status.js";
 import { getStatusConfig } from "../../utils/status.js";
 export default {
     name: "ReversalApplicationlIndex",
-    components: { CreateReversal },
+    components: { CreateReversal, pagination },
     props: {},
     setup() {
         return {
@@ -85,6 +89,9 @@ export default {
     },
     data() {
         return {
+            pageTotal: 0,
+            pageSize: 10,
+            page: 1,
             loading: false,
             original: "", // 上一个标签
             oid: null, // 单据ID
@@ -100,21 +107,32 @@ export default {
     methods: {
         getStatusConfig,
         formatDate(time) {
-            return time ? formatTime(time).format("YYYY-MM-DD HH:mm:ss") : "-";
+            return time ? formatTime(time).format("YYYY-MM-DD HH:mm:ss") : "--";
+        },
+        onCurrentChange(p) {
+            this.page = p;
+            this.loadGetParticulars(this.pageSize, p);
+        },
+        onSizeChange(s) {
+            this.pageSize = s;
+            this.page = 1;
+            this.loadGetParticulars(s, 1);
         },
         // 加载订单流水信息
-        async loadGetParticulars(oid) {
+        async loadGetParticulars(page_size = 10, page = 1, oid) {
             this.loading = true;
             this.error = false;
             this.particularsdata = [];
-
-            withDelay(() => GetParticulars({ oid }))
+            let params = convertToLimitOffset(page, page_size);
+            if (this.oid !== "") params = { oid: this.oid, ...params };
+            withDelay(() => GetParticulars(params))
                 .then((res) => {
                     if (res && res.payload) {
                         this.particulars = res.payload.items || [];
                         if (this.particulars.length > 0) {
                             this.particulars = this.particulars || {};
                         }
+                        this.pageTotal = res.payload.page_info.total;
                     }
                 })
                 .catch((err) => {
@@ -140,7 +158,7 @@ export default {
         },
 
         onRefresh() {
-            this.loadGetParticulars(this.oid);
+            this.loadGetParticulars(this.pageSize, this.page);
             this.loadGetOrderDetails(this.oid);
         },
         goBack() {

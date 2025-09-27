@@ -2,6 +2,13 @@
     <div class="settings-container">
         <el-dialog v-model="dialogVisible" title="权限管理">
             <div v-loading="loading">
+                <div class="warning-desc">
+                    <p>
+                        责任人：{{ placeholder.responsible }}。管理员：{{ placeholder.manager }}。审批卡点：{{ placeholder.approver }}。出入库卡点：{{
+                            placeholder.executor
+                        }}
+                    </p>
+                </div>
                 <el-form :model="form" label-width="100px">
                     <!-- 责任人 -->
                     <el-form-item label="责任人：">
@@ -9,7 +16,7 @@
                             v-model="form.responsible"
                             multiple
                             filterable
-                            placeholder="请选择责任人"
+                            :placeholder="placeholder.responsible"
                             @change="handlePermissionChange('RESPONSIBLE', 'responsible')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
@@ -17,7 +24,12 @@
 
                     <!-- 管理员 -->
                     <el-form-item label="管理员：">
-                        <el-select v-model="form.manager" multiple filterable placeholder="请选择管理员" @change="handlePermissionChange('MANAGER', 'manager')">
+                        <el-select
+                            v-model="form.manager"
+                            multiple
+                            filterable
+                            :placeholder="placeholder.manager"
+                            @change="handlePermissionChange('MANAGER', 'manager')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
                     </el-form-item>
@@ -28,7 +40,7 @@
                             v-model="form.approver"
                             multiple
                             filterable
-                            placeholder="请选择审批人"
+                            :placeholder="placeholder.approver"
                             @change="handlePermissionChange('APPROVER', 'approver')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
@@ -40,7 +52,7 @@
                             v-model="form.executor"
                             multiple
                             filterable
-                            placeholder="请选择执行人"
+                            :placeholder="placeholder.executor"
                             @change="handlePermissionChange('EXECUTOR', 'executor')">
                             <el-option v-for="val in user" :key="val.user_id" :label="val.username" :value="val.user_id" />
                         </el-select>
@@ -73,6 +85,12 @@ export default {
                 manager: [],
                 approver: [],
                 executor: [],
+            },
+            placeholder: {
+                responsible: "具有仓库所有权限",
+                manager: "具有仓库管理权限，不可审批红字冲销单",
+                approver: "具备审批卡点权限",
+                executor: "具备执行入库权限",
             },
             // 存储初始数据用于对比
             initialForm: {
@@ -253,5 +271,21 @@ export default {
 }
 .el-form-item {
     margin-bottom: 20px;
+}
+
+.warning-desc {
+    width: auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    border: 1px solid #ffb300e8;
+    margin-bottom: 20px;
+    background-color: #fff3cd;
+    border-radius: 5px;
+    p {
+        margin: 10px 0 10px;
+        font-size: 14px;
+        color: mediumblue;
+        line-height: 1.5;
+    }
 }
 </style>

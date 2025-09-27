@@ -17,6 +17,8 @@ const OutWarehouse = () => import("../views/stockout/outwarehouse.vue");
 const Supplier = () => import("../views/supplier/index.vue");
 const PrintPage = () => import("../views/printmp/printmp.vue"); // 打印页面
 const WarehousePrintTheme = () => import("../views/warehouse/theme.vue");
+const EditInWarehouse = () => import("../views/stockin/editwarehouse.vue");
+const EditOutWarehouse = () => import("../views/stockout/editwarehouse.vue");
 
 const MobileHome = () => import("../mobile/views/home/index.vue");
 const MobileLayout = () => import("../mobile/layout/index.vue");
@@ -42,10 +44,15 @@ const routes = [
             { meta: { title: "首页" }, path: "/", name: "home", component: loadComponent(Overview, MobileHome) },
             { meta: { title: "数据统计" }, path: "/overview", name: "overview", component: Overview },
             { meta: { title: "库存信息" }, path: "/inventory", name: "inventory", component: Inventory },
+
             { meta: { title: "出库管理" }, path: "/stockout", name: "stockout", component: Stockout },
-            { meta: { title: "出库管理 - 出库申请" }, path: "/stockin/delivery", name: "outWarehouse", component: loadComponent(OutWarehouse, MStockout) },
+            { meta: { title: "出库管理 - 出库申请" }, path: "/stockout/create", name: "outWarehouse", component: loadComponent(OutWarehouse, MStockout) },
+            { meta: { title: "出库管理 - 修改出库单" }, path: "/stockout/update", name: "editOutWarehouse", component: EditOutWarehouse },
+
             { meta: { title: "入库管理" }, path: "/stockin", name: "stockin", component: Stockin },
             { meta: { title: "入库管理 - 入库申请" }, path: "/stockin/create", name: "inWarehouse", component: loadComponent(InWarehouse, MStockin) },
+            { meta: { title: "入库管理 - 修改入库单" }, path: "/stockin/update", name: "editInWarehouse", component: EditInWarehouse },
+
             { meta: { title: "出入库明细" }, path: "/particulars", name: "particulars", component: Particulars },
             { meta: { title: "单据红冲" }, path: "/order/reversal/:oid", name: "ReversalApplication", component: ReversalApplication },
             { meta: { title: "仓库信息" }, path: "/warehouse", name: "warehouse", component: Warehouse },

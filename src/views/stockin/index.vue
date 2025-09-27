@@ -54,9 +54,16 @@
                                 <el-button link type="primary">更多</el-button>
                                 <template #dropdown>
                                     <el-dropdown-menu>
-                                        <el-dropdown-item>
-                                            <el-button link type="primary" @click="onReversal(scope.row)">红冲</el-button>
-                                        </el-dropdown-item>
+                                        <div v-if="scope.row.status === 'COMPLETED'">
+                                            <el-dropdown-item>
+                                                <el-button link type="primary" @click="onReversal(scope.row)">红冲</el-button>
+                                            </el-dropdown-item>
+                                        </div>
+                                        <div v-if="scope.row.status === 'PENDING'">
+                                            <el-dropdown-item>
+                                                <el-button link type="primary" @click="onUpdateOrder(scope.row)">编辑</el-button>
+                                            </el-dropdown-item>
+                                        </div>
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
@@ -118,6 +125,16 @@ export default {
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
         },
+        onCurrentChange(p) {
+            this.page = p;
+            this.loadGetstockorder(this.pageSize, p);
+        },
+        onSizeChange(s) {
+            this.pageSize = s;
+            this.page = 1;
+            this.loadGetstockorder(s, 1);
+        },
+        // 加载单据列表
         loadGetstockorder: function (page_size = 10, page = 1) {
             this.loading = true;
             let params = { direction: "in", ...convertToLimitOffset(page, page_size) };
@@ -138,30 +155,27 @@ export default {
                     this.query.loading = false;
                 });
         },
+        // 创建入库单
         onInStock() {
             this.$router.push({ name: "inWarehouse" });
         },
-        onCurrentChange(p) {
-            this.page = p;
-            this.loadGetstockorder(this.pageSize, p);
-        },
-        onSizeChange(s) {
-            this.pageSize = s;
-            this.page = 1;
-            this.loadGetstockorder(s, 1);
-        },
+
+        // 刷新
         onRefresh() {
             this.loadGetstockorder(this.pageSize, this.page);
         },
+        // 打开审批弹窗
         onOpenParticulars(val) {
             this.orderRow = val;
             this.$refs.InStatus.openDialog();
         },
+        // 搜索
         onSearch() {
             this.query.loading = true;
             this.page = 1;
             this.loadGetstockorder(this.pageSize, this.page);
         },
+        // 打印单据
         onPrint(val) {
             this.$router.push({
                 name: "eprint",
@@ -172,15 +186,21 @@ export default {
                 },
             });
         },
+        // 查看明细
         onLookParticulars(val) {
             this.$router.push({ name: "particulars", query: { serial: val.serial } });
         },
+        // 红冲
         onReversal(val) {
             this.$router.push({
                 name: "ReversalApplication",
                 params: { oid: val.order_id },
                 query: { _b: "i" },
             });
+        },
+        // 修改单据
+        onUpdateOrder(val) {
+            this.$router.push({ name: "editInWarehouse", query: { order_id: val.order_id } });
         },
     },
     created() {

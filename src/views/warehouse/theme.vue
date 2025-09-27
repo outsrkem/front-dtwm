@@ -27,15 +27,15 @@
                                 <div class="sborder" style="margin-bottom: 12px">
                                     <p>标题</p>
                                     <el-form-item label="主标题">
-                                        <el-input v-model="formIn.title.main" />
+                                        <el-input v-model="formIn.title.main" :placeholder="placeholder.title.main" />
                                     </el-form-item>
                                     <el-form-item label="副标题">
-                                        <el-input v-model="formIn.title.sub" />
+                                        <el-input v-model="formIn.title.sub" :placeholder="placeholder.title.sub" />
                                     </el-form-item>
                                 </div>
                                 <div class="title sborder">
-                                    <p>签名</p>
-                                    <el-form-item label="签名">
+                                    <p>签名（最多5个）</p>
+                                    <el-form-item label="是否启用">
                                         <el-radio-group v-model="formIn.signature.enabled">
                                             <el-radio :value="true">启用</el-radio>
                                             <el-radio :value="false">禁用</el-radio>
@@ -44,7 +44,7 @@
                                     <el-row :gutter="20" v-for="(sight, inx) in formIn.signature.items">
                                         <el-col :span="20">
                                             <el-form-item :label="`签名${inx + 1}`">
-                                                <el-input v-model="sight.label" />
+                                                <el-input v-model="sight.label" :placeholder="placeholder.signature.label" />
                                             </el-form-item>
                                         </el-col>
                                         <el-col :span="2">
@@ -76,16 +76,16 @@
                                 <div class="sborder" style="margin-bottom: 12px">
                                     <p>标题</p>
                                     <el-form-item label="主标题">
-                                        <el-input v-model="formOut.title.main" />
+                                        <el-input v-model="formOut.title.main" :placeholder="placeholder.title.main" />
                                     </el-form-item>
                                     <el-form-item label="副标题">
-                                        <el-input v-model="formOut.title.sub" />
+                                        <el-input v-model="formOut.title.sub" :placeholder="placeholder.title.sub" />
                                     </el-form-item>
                                 </div>
 
                                 <div class="title sborder">
-                                    <p>签名</p>
-                                    <el-form-item label="签名">
+                                    <p>签名（最多5个）</p>
+                                    <el-form-item label="是否启用">
                                         <el-radio-group v-model="formOut.signature.enabled">
                                             <el-radio :value="true">启用</el-radio>
                                             <el-radio :value="false">禁用</el-radio>
@@ -94,7 +94,7 @@
                                     <el-row :gutter="20" v-for="(sight, inx) in formOut.signature.items">
                                         <el-col :span="20">
                                             <el-form-item :label="`签名${inx + 1}`">
-                                                <el-input v-model="sight.label" />
+                                                <el-input v-model="sight.label" :placeholder="placeholder.signature.label" />
                                             </el-form-item>
                                         </el-col>
                                         <el-col :span="2">
@@ -154,6 +154,15 @@ export default {
                 title: { main: "", sub: "" },
                 signature: { enabled: true, items: [] },
             },
+            placeholder: {
+                title: {
+                    main: "输入打印时的单据主标题",
+                    sub: "输入打印时的单据副标题",
+                },
+                signature: {
+                    label: "请输入签名人职位，如：仓库管理员，出库员等",
+                },
+            },
             query: {
                 warehouse_id: "",
             },
@@ -182,22 +191,22 @@ export default {
                 .then(() => {
                     this.$message.success(msgcon("更新成功"));
                 })
-                .catch(() => {
+                .catch((err) => {
                     let msg = err.data.metadata.message;
-                    this.$message.error(msgcon("更新失败 " + msg));
+                    this.$message.error(msgcon(msg));
                 })
                 .finally(() => {
                     this.loading = false;
                 });
         },
         onAddInSignRow() {
-            this.formIn.signature.items.push({ label: "", required: false });
+            this.formIn.signature.items.push({ label: "", required: true });
         },
         onRemoveInSignRow(inx) {
             this.formIn.signature.items.splice(inx, 1);
         },
         onAddOutSignRow() {
-            this.formOut.signature.items.push({ label: "", required: false });
+            this.formOut.signature.items.push({ label: "", required: true });
         },
         onRemoveOutSignRow(inx) {
             this.formOut.signature.items.splice(inx, 1);
@@ -238,6 +247,7 @@ export default {
 }
 .sborder {
     border: 1px dashed #b1b1b1;
+    border-radius: 7px;
     padding: 8px 12px;
     text-align: center;
 }

@@ -29,10 +29,5 @@ app.use(vueCookies);
 app._context.components.ElDialog["props"].closeOnClickModal.default = false;
 app._context.components.ElDialog["props"].closeOnPressEscape.default = false;
 
-// 👇 删除这两行全局引入 Vant 的代码（按需引入已自动处理）
-// import Vant from "vant";
-// import "vant/lib/index.css";
-// app.use(Vant);
-
 // 挂载app
 app.mount("#app");
