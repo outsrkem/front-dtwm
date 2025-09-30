@@ -23,7 +23,7 @@
                             <p>入库报表主题</p>
                         </div>
                         <div>
-                            <el-form :model="formIn" label-width="auto">
+                            <el-form :model="formIn" label-width="auto" ref="formInRef">
                                 <div class="sborder" style="margin-bottom: 12px">
                                     <p>标题</p>
                                     <el-form-item label="主标题">
@@ -41,7 +41,7 @@
                                             <el-radio :value="false">禁用</el-radio>
                                         </el-radio-group>
                                     </el-form-item>
-                                    <el-row :gutter="20" v-for="(sight, inx) in formIn.signature.items">
+                                    <el-row :gutter="20" v-for="(sight, inx) in formIn.signature.items" :key="inx">
                                         <el-col :span="20">
                                             <el-form-item :label="`签名${inx + 1}`">
                                                 <el-input v-model="sight.label" :placeholder="placeholder.signature.label" />
@@ -72,7 +72,7 @@
                             <p>出库报表主题</p>
                         </div>
                         <div>
-                            <el-form :model="formOut" label-width="auto">
+                            <el-form :model="formOut" label-width="auto" ref="formOutRef">
                                 <div class="sborder" style="margin-bottom: 12px">
                                     <p>标题</p>
                                     <el-form-item label="主标题">
@@ -91,7 +91,7 @@
                                             <el-radio :value="false">禁用</el-radio>
                                         </el-radio-group>
                                     </el-form-item>
-                                    <el-row :gutter="20" v-for="(sight, inx) in formOut.signature.items">
+                                    <el-row :gutter="20" v-for="(sight, inx) in formOut.signature.items" :key="inx">
                                         <el-col :span="20">
                                             <el-form-item :label="`签名${inx + 1}`">
                                                 <el-input v-model="sight.label" :placeholder="placeholder.signature.label" />
@@ -129,9 +129,8 @@ import { withDelay } from "../../utils/common.js";
 import { msgcon } from "../../utils/message.js";
 import { GetPrintTheme, UpdateTheme } from "../../api/index.js";
 export default {
-    name: "HomeIndex",
+    name: "WarehousePrintTheme",
     components: {},
-    props: {},
     setup() {
         return {
             Refresh,
@@ -144,8 +143,6 @@ export default {
     data() {
         return {
             loading: false,
-            printTheme: {},
-            form: { in: { label: "" }, out: { required: false } },
             formIn: {
                 title: { main: "", sub: "" },
                 signature: { enabled: true, items: [] },
@@ -169,10 +166,9 @@ export default {
         };
     },
     methods: {
-        // 获取打印主题
-        loadGetPrintTheme: function (warehouse_id) {
+        loadGetPrintTheme() {
             this.loading = true;
-            const paths = { warehouse_id: warehouse_id };
+            const paths = { warehouse_id: this.query.warehouse_id };
             withDelay(() => GetPrintTheme(paths))
                 .then((res) => {
                     this.formIn = res.payload.theme.in;
@@ -183,16 +179,16 @@ export default {
                     this.loading = false;
                 });
         },
-        loadUpdateTheme: function (warehouse_id) {
+        loadUpdateTheme() {
             this.loading = true;
-            const paths = { warehouse_id: warehouse_id };
+            const paths = { warehouse_id: this.query.warehouse_id };
             const data = { in: this.formIn, out: this.formOut };
             withDelay(() => UpdateTheme(paths, data))
                 .then(() => {
                     this.$message.success(msgcon("更新成功"));
                 })
                 .catch((err) => {
-                    let msg = err.data.metadata.message;
+                    let msg = err.data?.metadata?.message || "更新失败";
                     this.$message.error(msgcon(msg));
                 })
                 .finally(() => {
@@ -200,36 +196,42 @@ export default {
                 });
         },
         onAddInSignRow() {
-            this.formIn.signature.items.push({ label: "", required: true });
+            if (this.formIn.signature.items.length < 5) {
+                this.formIn.signature.items.push({ label: "", required: true });
+            }
         },
         onRemoveInSignRow(inx) {
             this.formIn.signature.items.splice(inx, 1);
         },
         onAddOutSignRow() {
-            this.formOut.signature.items.push({ label: "", required: true });
+            if (this.formOut.signature.items.length < 5) {
+                this.formOut.signature.items.push({ label: "", required: true });
+            }
         },
         onRemoveOutSignRow(inx) {
             this.formOut.signature.items.splice(inx, 1);
         },
         onRefresh() {
-            this.loadGetPrintTheme(this.query.warehouse_id);
+            this.loadGetPrintTheme();
         },
         goBack() {
             const encodedOriginalPath = this.$route.query._s;
             if (encodedOriginalPath) {
                 try {
-                    const originalPath = encodedOriginalPath;
-                    this.$router.push(originalPath);
+                    // 关键修复：使用replace确保页面重新加载
+                    this.$router.replace(encodedOriginalPath);
                 } catch (err) {
-                    this.$router.go(-1); // 降级处理
+                    // 降级处理：强制刷新页面
+                    window.location.href = this.$router.resolve({
+                        path: encodedOriginalPath,
+                    }).href;
                 }
             } else {
                 this.$router.go(-1);
             }
         },
-        // 提交更新主题
         onSubmit() {
-            this.loadUpdateTheme(this.query.warehouse_id);
+            this.loadUpdateTheme();
         },
     },
     created() {
@@ -250,5 +252,6 @@ export default {
     border-radius: 7px;
     padding: 8px 12px;
     text-align: center;
+    margin-bottom: 15px;
 }
 </style>

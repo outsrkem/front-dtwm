@@ -28,7 +28,8 @@
         @pageChange="onCurrentChange"
         @sizeChange="onSizeChange"
         @addSelectedItems="onAddItemTolist"
-        @selectionChange="handleSelectionChange" />
+        @selectionChange="handleSelectionChange"
+        @update:historySupplement="handleHistorySupplementChange" />
 </template>
 
 <script lang="ts">
@@ -36,6 +37,7 @@ import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { GetOrderDetails, UpdateOrder, GetParticulars, GetItems, InStock, GetClassification, GetWarehouses, ListSuppliers } from "../../api/index.js";
 import StockForm from "../../components/stock/StockForm.vue";
 import { msgcon } from "../../utils/message.js";
+import { formatTime } from "../../utils/date.js";
 
 export default {
     name: "InWarehouseContainer",
@@ -86,6 +88,12 @@ export default {
                 supplier: "",
                 items: [],
                 remark: "",
+                // 新增历史单相关字段
+                isHistory: false,
+                history: {
+                    supplement: false, // 是否为历史单（对应接口supplement字段）
+                    operation_time: null, // 历史单操作时间（对应接口operation_time字段）
+                },
             },
             classification: [],
             warehouses: [],
@@ -106,7 +114,13 @@ export default {
         this.query.order_id = this.$route.query.order_id;
     },
     methods: {
-        /** 加载初始数据：分类、仓库、供应商 */
+        /** 处理历史单状态变更 */
+        handleHistorySupplementChange(checked) {
+            this.basic.history.supplement = checked;
+            this.basic.isHistory = checked;
+        },
+
+        /** 加载初始数据：分类、仓库、供应商、订单详情 */
         loadInitialData() {
             this.loadGetOrderDetails();
             this.loadGetParticulars();
@@ -122,13 +136,26 @@ export default {
             console.log("获取到 el-form 实例:", this.elFormInstance);
         },
 
-        /** 加载单据信息 */
+        /** 加载单据信息 - 包含历史单状态和时间 */
         loadGetOrderDetails() {
             GetOrderDetails({ order_id: this.query.order_id }).then((res) => {
-                this.basic.classification = res.payload.classification.id;
-                this.basic.warehouses = res.payload.warehouse.id;
-                this.basic.supplier = res.payload.supplier.id;
-                this.basic.remark = res.payload.remark;
+                const payload = res.payload;
+
+                // 基础订单信息
+                this.basic.classification = payload.classification.id;
+                this.basic.warehouses = payload.warehouse.id;
+                this.basic.supplier = payload.supplier.id;
+                this.basic.remark = payload.remark;
+
+                // 历史单信息处理
+                // supplement: 0代表正常单，1代表历史单
+                this.basic.history.supplement = payload.supplement === 1;
+                this.basic.isHistory = payload.supplement === 1;
+                // 处理历史时间（operation_time是毫秒时间戳）
+                if (payload.operation_time) {
+                    // 转换时间戳为ISO格式字符串，适配日期选择器
+                    this.basic.history.operation_time = formatTime(payload.operation_time).format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+                }
             });
         },
 
@@ -332,6 +359,13 @@ export default {
                     }
                 }
 
+                // 历史单验证：如果是历史单，必须选择历史时间
+                if (this.basic.history.supplement && !this.basic.history.operation_time) {
+                    this.$message.warning(msgcon("请选择历史单操作时间"));
+                    resolve(false);
+                    return;
+                }
+
                 resolve(true);
             });
         },
@@ -347,19 +381,33 @@ export default {
             this.loadUpdateOrder(this.query.order_id);
         },
 
-        /** 执行更新操作 */
+        /** 执行更新操作 - 包含历史单数据 */
         loadUpdateOrder(order_id) {
             this.basic.loading = true;
             const items = this.basic.items.map((item) => ({
                 id: item.id,
                 quantity: item.quantity,
             }));
+
+            // 处理历史单数据
+            let historyData = {
+                supplement: this.basic.history.supplement ? 1 : 0, // 转换为0/1格式
+                operation_time: null,
+            };
+
+            // 如果是历史单且有时间，转换为时间戳
+            if (this.basic.history.supplement && this.basic.history.operation_time) {
+                historyData.operation_time = new Date(this.basic.history.operation_time).getTime();
+            }
+
             const data = {
                 warehouse: { id: this.basic.warehouses },
                 classification: { id: this.basic.classification },
                 supplier: { id: this.basic.supplier },
                 item: items,
                 remark: this.basic.remark,
+                // 包含历史单数据
+                history: this.basic.history,
             };
             const paths = { order_id: order_id };
 

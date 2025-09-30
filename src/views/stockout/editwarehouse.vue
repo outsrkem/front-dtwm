@@ -18,7 +18,7 @@
         :result="result"
         :formRef="formRef"
         @formInstance="handleFormInstance"
-        @submit="onSubmitInStock"
+        @submit="onSubmitOutStock"
         @cancel="onCancel"
         @refresh="onRefreshBasicData"
         @removeItem="onRemoveItemlist"
@@ -28,7 +28,8 @@
         @pageChange="onCurrentChange"
         @sizeChange="onSizeChange"
         @addSelectedItems="onAddItemTolist"
-        @selectionChange="handleSelectionChange" />
+        @selectionChange="handleSelectionChange"
+        @update:historySupplement="handleHistorySupplementChange" />
 </template>
 
 <script lang="ts">
@@ -36,9 +37,10 @@ import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { GetOrderDetails, UpdateOrder, GetParticulars, SelectInventory, GetClassification, GetWarehouses, ListSuppliers } from "../../api/index.js";
 import StockForm from "../../components/stock/StockForm.vue";
 import { msgcon } from "../../utils/message.js";
+import { formatTime } from "../../utils/date.js";
 
 export default {
-    name: "InWarehouseContainer",
+    name: "OutWarehouseContainer",
     components: { StockForm },
     data() {
         return {
@@ -71,9 +73,9 @@ export default {
                 confirmButton: "确定",
             },
             rules: {
-                classification: [{ required: true, message: "请选择入库类型", trigger: "change" }],
-                warehouses: [{ required: true, message: "请选择入库仓库", trigger: "change" }],
-                supplier: [{ required: true, message: "请选择供应商", trigger: "change" }],
+                classification: [{ required: true, message: "请选择出库类型", trigger: "change" }],
+                warehouses: [{ required: true, message: "请选择出库仓库", trigger: "change" }],
+                supplier: [{ required: true, message: "请选择领用单位/人", trigger: "change" }],
             },
             selectItem: {
                 loading: true,
@@ -90,6 +92,12 @@ export default {
                 supplier: "",
                 items: [],
                 remark: "",
+                // 新增历史单相关字段
+                isHistory: false,
+                history: {
+                    supplement: false, // 是否为历史单（对应接口supplement字段）
+                    operation_time: null, // 历史单操作时间（对应接口operation_time字段）
+                },
             },
             classification: [],
             warehouses: [],
@@ -100,7 +108,7 @@ export default {
                 order_id: "",
             },
             elFormInstance: null,
-            formRef: "stockInForm",
+            formRef: "stockOutForm",
         };
     },
     mounted() {
@@ -110,7 +118,13 @@ export default {
         this.query.order_id = this.$route.query.order_id;
     },
     methods: {
-        /** 加载初始数据：分类、仓库、供应商 */
+        /** 处理历史单状态变更 */
+        handleHistorySupplementChange(checked) {
+            this.basic.history.supplement = checked;
+            this.basic.isHistory = checked;
+        },
+
+        /** 加载初始数据：分类、仓库、供应商、订单详情 */
         loadInitialData() {
             this.loadGetOrderDetails();
             this.loadGetParticulars();
@@ -126,19 +140,33 @@ export default {
             console.log("获取到 el-form 实例:", this.elFormInstance);
         },
 
-        /** 加载单据信息 */
+        /** 加载单据信息 - 包含历史单状态和时间 */
         loadGetOrderDetails() {
             GetOrderDetails({ order_id: this.query.order_id }).then((res) => {
-                this.basic.classification = res.payload.classification.id;
-                this.basic.warehouses = res.payload.warehouse.id;
-                this.basic.supplier = res.payload.supplier.id;
-                this.basic.remark = res.payload.remark;
+                const payload = res.payload;
+
+                // 基础订单信息
+                this.basic.classification = payload.classification.id;
+                this.basic.warehouses = payload.warehouse.id;
+                this.basic.supplier = payload.supplier.id;
+                this.basic.remark = payload.remark;
+
+                // 历史单信息处理
+                // supplement: 0代表正常单，1代表历史单
+                this.basic.history.supplement = payload.supplement === 1;
+                this.basic.isHistory = payload.supplement === 1;
+
+                // 处理历史时间（operation_time是毫秒时间戳）
+                if (payload.operation_time) {
+                    // 转换时间戳为ISO格式字符串，适配日期选择器
+                    this.basic.history.operation_time = formatTime(payload.operation_time).format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+                }
             });
         },
 
         /** 加载单据的物品明细 */
         loadGetParticulars() {
-            GetParticulars({ oid: this.query.order_id })
+            GetParticulars({ limit: 100, oid: this.query.order_id })
                 .then((res) => {
                     // 检查响应结构的完整性
                     if (!res || !res.payload || !Array.isArray(res.payload.items)) {
@@ -158,8 +186,14 @@ export default {
                             specification: item.item?.specification || "",
                             unit: item.item?.unit || "",
                             quantity: item.detailedly?.quantity || "0",
-                            warehouseId: item.warehouse?.id || "",
-                            warehouseName: item.warehouse?.name || "",
+                            warehouse: {
+                                id: item.warehouseId || item.warehouse?.id || "",
+                                name: item.warehouseName || item.warehouse?.name || "",
+                            },
+                            // 出库特有字段
+                            current: item.item.current || 0,
+                            lock: item.item.lock || 0,
+                            available: item.item.available || 0,
                         });
                     });
                 })
@@ -169,9 +203,9 @@ export default {
                 });
         },
 
-        /** 加载入库类型数据 */
+        /** 加载出库类型数据 */
         loadGetClassification() {
-            GetClassification({ t: "in" })
+            GetClassification({ t: "out" }) // 改为"out"获取出库类型
                 .then((res) => {
                     this.classification = res.payload.items;
                 })
@@ -193,17 +227,18 @@ export default {
                 });
         },
 
-        /** 加载供应商数据 */
+        /** 加载领用单位/人数据 */
         loadListSuppliers() {
             ListSuppliers(convertToLimitOffset(1, 100))
                 .then((res) => {
                     this.supplier = res.payload.items;
                 })
                 .catch((err) => {
-                    console.error("加载供应商数据失败:", err);
-                    this.$message.error(msgcon("加载供应商数据失败"));
+                    console.error("加载领用单位数据失败:", err);
+                    this.$message.error(msgcon("加载领用单位数据失败"));
                 });
         },
+
         // 加载库存物品数据（出库特有，需要关联仓库）
         loadSelectInventory(page_size, page) {
             // 验证仓库是否已选择，未选择则清空列表
@@ -226,7 +261,14 @@ export default {
             // 调用接口获取库存物品列表，withDelay用于添加延迟避免频繁请求
             withDelay(() => SelectInventory(params))
                 .then((res) => {
-                    this.items = res.payload.items;
+                    // 获取当前已选择的物品ID列表
+                    const selectedIds = this.basic.items.map((item) => item.id);
+
+                    // 为每个物品添加isDisabled属性，标记是否已选择
+                    this.items = res.payload.items.map((item) => ({
+                        ...item,
+                        isDisabled: selectedIds.includes(item.id),
+                    }));
                     this.pageTotal = res.payload.page_info.total;
                 })
                 .catch((err) => {
@@ -237,6 +279,7 @@ export default {
                     this.loading = false; // 无论成功失败，结束加载状态
                 });
         },
+
         /** 处理页码变化 */
         onCurrentChange(p) {
             this.page = p;
@@ -276,7 +319,12 @@ export default {
             }
 
             const existingIds = this.basic.items.map((item) => item.id);
-            const newItems = this.selectedRows.filter((item) => !existingIds.includes(item.id)).map((item) => ({ ...item, quantity: "" }));
+            const newItems = this.selectedRows
+                .filter((item) => !existingIds.includes(item.id))
+                .map((item) => ({
+                    ...item,
+                    quantity: "",
+                }));
 
             this.basic.items.push(...newItems);
             this.selectItem.dialogVisible = false;
@@ -322,8 +370,8 @@ export default {
             }
         },
 
-        /** 验证入库单表单 */
-        async valiInStockForm() {
+        /** 验证出库单表单 */
+        async valiOutStockForm() {
             return new Promise((resolve) => {
                 if (!this.basic.items.length) {
                     this.$message.warning(msgcon("请添加物品"));
@@ -331,43 +379,71 @@ export default {
                     return;
                 }
 
-                // 验证数量是否为有效数字
+                // 验证数量是否为有效数字且不超过可用库存
                 for (const item of this.basic.items) {
                     if (!item.quantity || isNaN(Number(item.quantity)) || Number(item.quantity) <= 0) {
                         this.$message.warning(`物品"${item.name}"的数量必须为正数`);
                         resolve(false);
                         return;
                     }
+
+                    // 出库特有验证：检查是否超过可用库存
+                    if (Number(item.quantity) > Number(item.available)) {
+                        this.$message.warning(`物品"${item.name}"的出库数量不能超过可用库存(${item.available})`);
+                        resolve(false);
+                        return;
+                    }
+                }
+
+                // 历史单验证：如果是历史单，必须选择历史时间
+                if (this.basic.history.supplement && !this.basic.history.operation_time) {
+                    this.$message.warning(msgcon("请选择历史单操作时间"));
+                    resolve(false);
+                    return;
                 }
 
                 resolve(true);
             });
         },
 
-        /** 提交入库单 */
-        async onSubmitInStock() {
+        /** 提交出库单 */
+        async onSubmitOutStock() {
             const basicValid = await this.valiBasicForm();
             if (!basicValid) return;
 
-            const stockValid = await this.valiInStockForm();
+            const stockValid = await this.valiOutStockForm();
             if (!stockValid) return;
 
             this.loadUpdateOrder(this.query.order_id);
         },
 
-        /** 执行更新操作 */
+        /** 执行更新操作 - 包含历史单数据 */
         loadUpdateOrder(order_id) {
             this.basic.loading = true;
             const items = this.basic.items.map((item) => ({
                 id: item.id,
                 quantity: item.quantity,
             }));
+
+            // 处理历史单数据
+            let historyData = {
+                supplement: this.basic.history.supplement ? 1 : 0, // 转换为0/1格式
+                operation_time: null,
+            };
+
+            // 如果是历史单且有时间，转换为时间戳
+            if (this.basic.history.supplement && this.basic.history.operation_time) {
+                historyData.operation_time = new Date(this.basic.history.operation_time).getTime();
+            }
+
             const data = {
                 warehouse: { id: this.basic.warehouses },
                 classification: { id: this.basic.classification },
                 supplier: { id: this.basic.supplier },
                 item: items,
                 remark: this.basic.remark,
+                // 包含历史单数据
+                history: this.basic.history,
             };
             const paths = { order_id: order_id };
 
@@ -376,7 +452,7 @@ export default {
                     this.result = true;
                 })
                 .catch((err) => {
-                    console.error("更新入库单失败:", err);
+                    console.error("更新出库单失败:", err);
                     let msg = err.data.metadata.message;
                     this.$message.error(msgcon(msg));
                 })

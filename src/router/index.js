@@ -5,7 +5,12 @@ const Layout = () => import("../views/layout/index.vue");
 // const Home = () => import("../views/home/index.vue");
 const ReversalIdx = () => import("../views/reversal/index.vue");
 const ReversalApplication = () => import("../views/reversal/reversal.vue");
-const Overview = () => import("../views/overview/index.vue");
+const OverviewStock = () => import("../views/overview/stock.vue");
+const OverviewYearCollect = () => import("../views/overview/yearcollect.vue");
+const OverviewMonthCollect = () => import("../views/overview/monthcollect.vue");
+const OverviewCustomCollect = () => import("../views/overview/custom.vue");
+const OrderAggregate = () => import("../views/overview/aggregate.vue");
+
 const Inventory = () => import("../views/inventory/index.vue");
 const Stockout = () => import("../views/stockout/index.vue");
 const Stockin = () => import("../views/stockin/index.vue");
@@ -15,7 +20,9 @@ const Items = () => import("../views/item/index.vue");
 const InWarehouse = () => import("../views/stockin/inwarehouse.vue");
 const OutWarehouse = () => import("../views/stockout/outwarehouse.vue");
 const Supplier = () => import("../views/supplier/index.vue");
-const PrintPage = () => import("../views/printmp/printmp.vue"); // 打印页面
+const PrintPage = () => import("../views/printmp/printmp.vue"); // 单据打印页面
+const AggregateOrderPrintPage = () => import("../views/printmp/aggregate.vue"); // 聚合单据打印
+
 const WarehousePrintTheme = () => import("../views/warehouse/theme.vue");
 const EditInWarehouse = () => import("../views/stockin/editwarehouse.vue");
 const EditOutWarehouse = () => import("../views/stockout/editwarehouse.vue");
@@ -41,10 +48,14 @@ const routes = [
         component: loadComponent(Layout, MobileLayout), // 动态选择布局（PC端Layout或移动端Layout）
         meta: { title: "DTWM" },
         children: [
-            { meta: { title: "首页" }, path: "/", name: "home", component: loadComponent(Overview, MobileHome) },
-            { meta: { title: "数据统计" }, path: "/overview", name: "overview", component: Overview },
-            { meta: { title: "库存信息" }, path: "/inventory", name: "inventory", component: Inventory },
+            { meta: { title: "首页" }, path: "/", name: "home", component: loadComponent(OverviewStock, MobileHome) },
+            { meta: { title: "数据统计" }, path: "/overview/stock", name: "overviewStock", component: OverviewStock },
+            { meta: { title: "数据统计" }, path: "/overview/year", name: "overviewYearCollect", component: OverviewYearCollect },
+            { meta: { title: "数据统计" }, path: "/overview/month", name: "overviewMonthCollect", component: OverviewMonthCollect },
+            { meta: { title: "数据统计" }, path: "/overview/custom", name: "overviewCustomCollect", component: OverviewCustomCollect },
+            { meta: { title: "数据统计" }, path: "/overview/aggregate", name: "orderAggregate", component: OrderAggregate },
 
+            { meta: { title: "库存信息" }, path: "/inventory", name: "inventory", component: Inventory },
             { meta: { title: "出库管理" }, path: "/stockout", name: "stockout", component: Stockout },
             { meta: { title: "出库管理 - 出库申请" }, path: "/stockout/create", name: "outWarehouse", component: loadComponent(OutWarehouse, MStockout) },
             { meta: { title: "出库管理 - 修改出库单" }, path: "/stockout/update", name: "editOutWarehouse", component: EditOutWarehouse },
@@ -68,6 +79,12 @@ const routes = [
         ],
     },
     { meta: { title: "仓库管理系统 - 数据打印" }, path: "/eprint", name: "eprint", component: PrintPage },
+    {
+        meta: { title: "仓库管理系统 - 聚合单据打印打印" },
+        path: "/eprint/aggregate-order",
+        name: "aggregateOrderPrintPage",
+        component: AggregateOrderPrintPage,
+    },
     {
         path: "/:pathMatch(.*)*",
         component: NotFound,

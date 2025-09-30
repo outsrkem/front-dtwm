@@ -8,6 +8,7 @@ export function formatTime(value) {
         },
     };
 }
+
 export function CurrentTime() {
     // 返回一个对象，包含日期、时间和星期几
     const now = new Date();

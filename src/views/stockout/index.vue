@@ -27,7 +27,13 @@
                 </div>
             </template>
             <el-table :data="order" style="width: 100%" v-loading="loading">
-                <el-table-column prop="serial" label="业务单据" width="300" />
+                <el-table-column label="业务单据" width="300">
+                    <template #default="scope">
+                        <span :class="{ 'text-red': scope.row.supplement === 1 }">
+                            {{ scope.row.serial }}
+                        </span>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="warehouse.name" label="仓库" />
                 <el-table-column prop="classification.name" label="类型" />
                 <el-table-column prop="owner.username" label="提交人" />
@@ -203,4 +209,8 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.text-red {
+    color: red;
+}
+</style>

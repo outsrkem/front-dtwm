@@ -35,7 +35,7 @@
                                     {{ currentTheme.statusText.name }}
                                     <!-- 当状态为 EXECUTED 或 COMPLETED 时显示实际日期 -->
                                     <span v-if="['EXECUTED', 'COMPLETED'].includes(stockorder.status)">
-                                        {{ dayjs(stockorder.update_time).format("YYYY-MM-DD") }}
+                                        {{ formatDate(stockorder.operation_time, "YYYY-MM-DD") }}
                                     </span>
                                     <!-- 其他状态显示固定文本 -->
                                     <span v-else>{{ currentTheme.statusText.pending }}</span>
@@ -121,7 +121,7 @@ import { formatTime } from "../../utils/date.js";
 import { withDelay } from "../../utils/common.js";
 import { getStatusConfig } from "../../utils/status.js";
 import { printTheme } from "../../utils/theme.js";
-import { SelectStockOrder, GetParticulars, GetPrintTheme } from "../../api/index.js";
+import { GetOrderDetails, GetParticulars, GetPrintTheme } from "../../api/index.js";
 export default {
     name: "PrintPageIndex",
     components: { vueQr },
@@ -195,20 +195,9 @@ export default {
         };
     },
     computed: {},
-    // watch: {
-    //     query: {
-    //         deep: true,
-    //         immediate: true,
-    //         handler(newVal) {
-    //             if (newVal) {
-    //                 this.loadSelectStockOrder(newVal.serial);
-    //             }
-    //         },
-    //     },
-    // },
     methods: {
-        formatDate(time) {
-            return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
+        formatDate(time, format = "YYYY-MM-DD HH:mm:ss") {
+            return formatTime(time).format(format);
         },
         itemName(val) {
             if (val.detailedly.correct_type === "ORIGINAL") {
@@ -266,10 +255,10 @@ export default {
             }, 100);
         },
         loadSelectStockOrder: function (id) {
-            withDelay(() => SelectStockOrder({ id: id }))
+            withDelay(() => GetOrderDetails({ order_id: id }))
                 .then((res) => {
                     this.resTime = res.metadata.time;
-                    this.stockorder = res.payload.items[0];
+                    this.stockorder = res.payload;
                     this.currentTheme = this.stockorder.type === "IN" ? this.theme.in : this.theme.out;
                 })
                 .finally(() => {

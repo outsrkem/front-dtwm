@@ -16,14 +16,14 @@ const baseURL = "/api/dtwm";
 export const Resume = () => ajax(`${baseURL}/v1/resume`, "POST");
 
 // 查询仓库
-// 新建仓库
-// 删除仓库
-// 更新仓库 PUT /dtwm/warehouses/:warehouse_id
-// 根据Id获取仓库详情 GET /v1/warehouses/:warehouseId
 export const GetWarehouses = (params) => ajax(`${baseURL}/v1/warehouses`, "GET", params, null);
+// 根据Id获取仓库详情
 export const GetWarehouseByID = (paths) => ajax(`${baseURL}/v1/warehouses/${paths.warehouse_id}`, "GET", null, null);
+// 新建仓库
 export const CreateWarehouses = (data) => ajax(`${baseURL}/v1/warehouses`, "POST", null, data);
+// 删除仓库
 export const DeleteWarehouses = (paths) => ajax(`${baseURL}/v1/warehouses/${paths.id}`, "DELETE", null, null);
+// 更新仓库
 export const UpdateWarehouse = (paths, data) => ajax(`${baseURL}//v1/warehouses/${paths.warehouse_id}`, "PUT", null, data);
 
 // 出入库单据列表
@@ -107,5 +107,14 @@ export const ExamineReversal = (paths, data) => ajax(`${baseURL}/v1/reversal/exa
 
 // h.GET("/v1/report/theme/:warehousesId", printcfg.GetPrintTheme())
 export const GetPrintTheme = (paths) => ajax(`${baseURL}/v1/report/theme/${paths.warehouse_id}`, "GET", null, null);
-
 export const UpdateTheme = (paths, data) => ajax(`${baseURL}/v1/report/theme/${paths.warehouse_id}`, "PUT", null, data);
+
+// 周期汇总 GET /v1/overview/summary
+export const GetStockSummary = (params) => ajax(`${baseURL}/v1/overview/summary`, "GET", params, null);
+// 单据聚合查询 POST /v1/aggregate/order
+export const OrderAggregate = (data) => ajax(`${baseURL}/v1/aggregate/order`, "POST", null, data);
+export const OrderAggregateCache = (paths) => ajax(`${baseURL}/v1/aggregate/${paths.aggregate_id}`, "GET", null, null);
+// 查询大于0库存物品
+export const PositiveStock = (params) => ajax(`${baseURL}/v1/overview/positive/stock`, "GET", params, null);
+// 查询0库存物品
+export const ZeroStock = (params) => ajax(`${baseURL}/v1/overview/zero/stock`, "GET", params, null);

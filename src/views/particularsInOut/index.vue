@@ -44,7 +44,9 @@
             <el-table :data="particularsdata" style="width: 100%" v-loading="loading">
                 <el-table-column label="业务单据" min-width="100px">
                     <template #default="scope">
-                        {{ scope.row.order.serial }}
+                        <span :class="{ 'text-red': scope.row.order.supplement === 1 }">
+                            {{ scope.row.order.serial }}
+                        </span>
                     </template>
                 </el-table-column>
                 <el-table-column prop="warehouse.name" label="仓库" />
@@ -237,4 +239,8 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.text-red {
+    color: red;
+}
+</style>

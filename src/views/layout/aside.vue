@@ -4,10 +4,36 @@
             <el-aside class="aside" style="width: auto">
                 <p style="text-align: center">出入库管理系统</p>
                 <el-menu :default-active="activePath" unique-opened>
-                    <el-menu-item index="/overview" @click="OnSwitchRoutes('/overview')">
+                    <el-sub-menu index="1">
+                        <template #title>
+                            <el-icon><DataLine /></el-icon>
+                            <span>数据总览</span>
+                        </template>
+                        <el-menu-item index="/overview/stock" @click="OnSwitchRoutes('/overview/stock')">
+                            <el-icon><Warning /></el-icon>
+                            <template #title><span>库存预警</span></template>
+                        </el-menu-item>
+                        <el-menu-item index="/overview/month" @click="OnSwitchRoutes('/overview/month')">
+                            <el-icon><Histogram /></el-icon>
+                            <template #title><span>月度汇总</span></template>
+                        </el-menu-item>
+                        <el-menu-item index="/overview/year" @click="OnSwitchRoutes('/overview/year')">
+                            <el-icon><Memo /></el-icon>
+                            <template #title><span>年度汇总</span></template>
+                        </el-menu-item>
+                        <el-menu-item index="/overview/custom" @click="OnSwitchRoutes('/overview/custom')">
+                            <el-icon><ZoomIn /></el-icon>
+                            <template #title><span>自定义查询</span></template>
+                        </el-menu-item>
+                        <el-menu-item index="/overview/aggregate" @click="OnSwitchRoutes('/overview/aggregate')">
+                            <el-icon><Memo /></el-icon>
+                            <template #title><span>聚合查询</span></template>
+                        </el-menu-item>
+                    </el-sub-menu>
+                    <!-- <el-menu-item index="/overview/stock" @click="OnSwitchRoutes('/overview/stock')">
                         <el-icon><DataLine /></el-icon>
                         <template #title><span>数据总览</span></template>
-                    </el-menu-item>
+                    </el-menu-item> -->
                     <el-menu-item index="/inventory" @click="OnSwitchRoutes('/inventory')">
                         <el-icon><Reading /></el-icon>
                         <template #title><span>库存信息</span></template>

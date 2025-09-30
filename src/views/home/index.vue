@@ -18,7 +18,7 @@ export default {
     },
     methods: {},
     created() {
-        this.$router.push({ name: "overview" });
+        this.$router.push({ name: "overviewStock" });
     },
 };
 </script>

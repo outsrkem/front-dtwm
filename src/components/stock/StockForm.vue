@@ -12,14 +12,14 @@
             <el-form ref="formRef" label-position="left" :inline="isDesktop" :rules="rules" label-width="auto" :model="formData" class="form-inline">
                 <!-- 业务类型选择 -->
                 <el-form-item :label="labels.classification" prop="classification">
-                    <el-select v-model="formData.classification" placeholder="选择类型" clearable filterable>
+                    <el-select style="width: 200px" v-model="formData.classification" placeholder="选择类型" clearable filterable>
                         <el-option v-for="(item, inx) in classifications" :key="inx" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
 
                 <!-- 仓库选择 -->
                 <el-form-item :label="labels.warehouse" prop="warehouses">
-                    <el-select v-model="formData.warehouses" placeholder="选择仓库" clearable filterable>
+                    <el-select style="width: 260px" v-model="formData.warehouses" placeholder="选择仓库" clearable filterable>
                         <el-option v-for="(item, inx) in warehouses" :key="inx" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
@@ -27,7 +27,7 @@
                 <!-- 供应商/领用单位选择 -->
                 <el-form-item :label="labels.supplier" prop="supplier">
                     <el-space>
-                        <el-select v-model="formData.supplier" placeholder="选择往来单位" clearable filterable>
+                        <el-select style="width: 260px" v-model="formData.supplier" placeholder="选择往来单位" clearable filterable>
                             <el-option v-for="(item, inx) in suppliers" :key="inx" :label="item.name" :value="item.id">
                                 <span style="float: left">{{ item.name }}</span>
                                 <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px">
@@ -36,6 +36,20 @@
                             </el-option>
                         </el-select>
                         <el-button style="font-size: 19px; padding-left: 8px; padding-right: 8px" :icon="Refresh" @click="$emit('refresh')" />
+                    </el-space>
+                </el-form-item>
+
+                <!-- 补历史单功能 -->
+                <el-form-item label="补历史单">
+                    <el-space>
+                        <!-- 使用本地数据而非直接绑定props -->
+                        <el-checkbox v-model="localHistorySupplement" @change="handleHistoryChange" />
+                        <el-date-picker
+                            :disabled="!localHistorySupplement"
+                            v-model="historyTime"
+                            type="datetime"
+                            placeholder="选择出入库时间"
+                            value-format="YYYY-MM-DDTHH:mm:ss.SSSZ" />
                     </el-space>
                 </el-form-item>
             </el-form>
@@ -96,7 +110,10 @@
                                 <td>{{ item.available }}</td>
                             </template>
                             <td>
-                                <el-input v-model="formData.items[inx].quantity" placeholder="数据范围: (0, 999999.9999], 最大保留4位小数" />
+                                <el-input
+                                    v-model="formData.items[inx].quantity"
+                                    placeholder="数据范围: (0, 999999.9999], 最大保留4位小数"
+                                    @input="handleQuantityInput(inx)" />
                             </td>
                             <td>
                                 <el-button link type="primary" @click="$emit('removeItem', inx)">
@@ -126,7 +143,7 @@
             <!-- 操作按钮 -->
             <div>
                 <el-button bg text @click="$emit('cancel')" style="width: 120px">{{ labels.cancelButton }}</el-button>
-                <el-button type="primary" @click="$emit('submit')" style="width: 120px">{{ labels.submitButton }}</el-button>
+                <el-button type="primary" @click="handleSubmit" style="width: 120px">{{ labels.submitButton }}</el-button>
             </div>
         </div>
 
@@ -155,7 +172,7 @@
             </div>
 
             <el-table :data="items" style="width: 100%" @selection-change="$emit('selectionChange', $event)" v-loading="loading">
-                <!-- 关键修改：根据已选物品ID列表决定是否禁用选择框 -->
+                <!-- 根据已选物品ID列表决定是否禁用选择框 -->
                 <el-table-column type="selection" width="55" :selectable="(row) => !selectedItemIds.includes(row.id)" />
                 <el-table-column v-if="direction === 'out'" prop="warehouse.name" :label="labels.tableWarehouse" show-overflow-tooltip />
                 <el-table-column prop="name" :label="labels.tableName" show-overflow-tooltip />
@@ -284,6 +301,11 @@ export default {
                 supplier: "",
                 items: [],
                 remark: "",
+                isHistory: false,
+                history: {
+                    supplement: false,
+                    operation_time: null,
+                },
             }),
         },
         loading: {
@@ -315,7 +337,6 @@ export default {
             type: String,
             default: "stockForm",
         },
-        // 新增：接收已选物品ID列表
         selectedItemIds: {
             type: Array,
             default: () => [],
@@ -334,17 +355,120 @@ export default {
         "addSelectedItems",
         "selectionChange",
         "formInstance",
+        "update:historySupplement",
     ],
+    data() {
+        return {
+            historyTime: this.formData.history.operation_time || null,
+            // 本地维护补历史单的勾选状态
+            localHistorySupplement: this.formData?.history?.supplement || false,
+        };
+    },
     setup() {
         return { Plus, Refresh, Search };
     },
+    watch: {
+        "formData.history.supplement": {
+            handler(newVal) {
+                this.localHistorySupplement = newVal;
+                this.historyTime = this.formData.history.operation_time;
+            },
+            immediate: true,
+        },
+        historyTime(newVal) {
+            if (this.formData?.history) {
+                this.formData.history.operation_time = newVal;
+            }
+        },
+    },
     mounted() {
-        // 组件挂载后，将 el-form 实例传递给父组件
+        // 确保formData和history属性存在
+        if (!this.formData) {
+            this.formData = {
+                loading: false,
+                classification: "",
+                warehouses: "",
+                supplier: "",
+                items: [],
+                remark: "",
+                isHistory: false,
+                history: {
+                    supplement: false,
+                    operation_time: null,
+                },
+            };
+        } else if (!this.formData.history) {
+            this.formData.history = {
+                supplement: false,
+                operation_time: null,
+            };
+        }
+        console.log("=====", this.formData.history);
+        const a = this.formData.history;
+        this.historyTime = a.operation_time;
         this.$emit("formInstance", this.$refs.formRef);
     },
     methods: {
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
+        },
+        handleHistoryChange(checked) {
+            if (!this.formData.history) {
+                this.formData.history = {
+                    supplement: false,
+                    operation_time: null,
+                };
+            }
+
+            this.localHistorySupplement = checked;
+            this.$emit("update:historySupplement", checked);
+            this.formData.isHistory = checked;
+            this.formData.history.supplement = checked;
+
+            if (!checked) {
+                this.historyTime = null;
+                this.formData.history.operation_time = null;
+            }
+        },
+        handleQuantityInput(index) {
+            const value = this.formData.items[index].quantity;
+            if (value) {
+                const formatted = parseFloat(value.toString().match(/^\d*(\.?\d{0,4})/g)[0] || 0);
+                this.formData.items[index].quantity = formatted;
+            }
+        },
+        handleSubmit() {
+            this.$refs.formRef.validate((valid) => {
+                if (valid) {
+                    if (!this.formData.items || this.formData.items.length === 0) {
+                        this.$message.error("请至少添加一个物品");
+                        return;
+                    }
+
+                    const submitData = {
+                        history: {
+                            supplement: this.formData?.history?.supplement || false,
+                            operation_time: this.historyTime || null,
+                        },
+                        warehouse: {
+                            id: this.formData.warehouses,
+                        },
+                        classification: {
+                            id: this.formData.classification,
+                        },
+                        supplier: {
+                            id: this.formData.supplier,
+                        },
+                        item: this.formData.items.map((item) => ({
+                            id: item.id,
+                            quantity: item.quantity || 0,
+                        })),
+                        remark: this.formData.remark || "",
+                    };
+
+                    this.$emit("submit", submitData);
+                }
+            });
         },
     },
 };
@@ -394,7 +518,6 @@ th {
 }
 
 .warning-desc {
-    /* 保持您原有的框子样式不变 */
     width: 500px;
     padding-left: 10px;
     padding-right: 10px;
@@ -404,29 +527,24 @@ th {
     overflow: hidden;
     white-space: nowrap;
     position: relative;
-    min-height: 28px; /* 确保内容不会被挤压 */
+    min-height: 28px;
 }
 
 .warning-desc p {
-    /* 保持原有文字基础样式 */
     margin: 4px 0;
     font-size: 14px;
     color: mediumblue;
     line-height: 1.5;
-
-    /* 滚动相关设置 */
     display: inline-block;
     animation: scroll-left 15s linear infinite;
     animation-play-state: running;
 }
 
-/* 复制文本用于无缝衔接 */
 .warning-desc p::after {
     content: attr(data-text);
-    margin-left: 30px; /* 两个文本之间的间距 */
+    margin-left: 30px;
 }
 
-/* 修复动画关键帧 */
 @keyframes scroll-left {
     0% {
         transform: translateX(100%);
@@ -436,7 +554,6 @@ th {
     }
 }
 
-/* 确保动画不会被暂停 */
 .warning-desc:hover p {
     animation-play-state: running !important;
 }

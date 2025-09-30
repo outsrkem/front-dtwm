@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
-// 1. 引入 Element Plus 和 Vant 的解析器
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { VantResolver } from "unplugin-vue-components/resolvers";
 
@@ -11,11 +10,9 @@ export default defineConfig({
     plugins: [
         vue(),
         AutoImport({
-            // 2. 同时添加两个组件库的解析器（自动导入组件API）
             resolvers: [ElementPlusResolver(), VantResolver()],
         }),
         Components({
-            // 3. 同时添加两个组件库的解析器（自动导入组件）
             resolvers: [ElementPlusResolver(), VantResolver()],
         }),
     ],
@@ -25,13 +22,29 @@ export default defineConfig({
             "/api": {
                 target: "https://uias.localvm.outsrkem.top:30078",
                 changeOrigin: true,
-                // rewrite: (path) => path.replace(/^\/api/, ""),
             },
             "/authui": {
                 target: "https://uias.localvm.outsrkem.top:30078",
                 changeOrigin: true,
-                // rewrite: (path) => path.replace(/^\/api/, ""),
             },
+        },
+    },
+    build: {
+        // 强制启用压缩
+        minify: "terser",
+        terserOptions: {
+            compress: {
+                // 移除所有console
+                drop_console: true,
+                // 移除debugger
+                drop_debugger: true,
+                // 额外优化：合并连续的console
+                collapse_vars: true,
+            },
+            // 压缩输出
+            mangle: true,
+            // 保留函数名（可选，便于错误追踪）
+            keep_fnames: false,
         },
     },
 });

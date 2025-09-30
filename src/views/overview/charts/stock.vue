@@ -1,46 +1,11 @@
 <template>
-    <div>
-        <el-card class="box-card">
-            <template #header>
-                <div class="my_refresh">
-                    <el-row>
-                        <span>库存数据总览</span>
-                        <span style="padding-left: 5px; padding-right: 5px"></span>
-                    </el-row>
-                    <el-row>
-                        <el-button type="primary" :icon="Refresh" @click="onRefresh" :loading="loading" style="margin-left: 10px">刷新</el-button>
-                    </el-row>
-                </div>
-            </template>
-            <el-row :gutter="20">
-                <el-col :span="16" v-loading="loading">
-                    <!-- 增加图表容器高度 -->
-                    <div id="kcyj"></div>
-                </el-col>
-                <el-col :span="8">
-                    <el-space direction="vertical">
-                        <el-select
-                            clearable
-                            v-model="query.warehouses.id"
-                            placeholder="选择仓库"
-                            style="width: 240px"
-                            @change="onRefresh"
-                            filterable
-                            remote
-                            :remote-method="onRemoteSearch">
-                            <el-option v-for="item in warehouses" :key="item.id" :label="item.name" :value="item.id" />
-                        </el-select>
-                    </el-space>
-                </el-col>
-            </el-row>
-        </el-card>
-    </div>
+    <div id="kcyj" v-loading="loading"></div>
 </template>
 
 <script>
-import { debounce } from "lodash-es"; // 或 'lodash'，取决于你的项目配置
-import { StockEarly, GetWarehouses } from "../../api/index.js";
-import { withDelay } from "../../utils/common.js";
+import { debounce } from "lodash-es";
+import { PositiveStock } from "../../../api/index.js";
+import { withDelay } from "../../../utils/common.js";
 import * as echarts from "echarts/core";
 import { ToolboxComponent, TooltipComponent, GridComponent, LegendComponent, BrushComponent, TitleComponent } from "echarts/components";
 import { BarChart } from "echarts/charts";
@@ -55,13 +20,22 @@ export default {
             Refresh,
         };
     },
-    name: "HomeIndex",
+    name: "StockIndex",
     components: {},
-    props: {},
+    props: {
+        vdata: {
+            type: Object,
+            default: () => ({
+                warehouses: {
+                    id: "",
+                },
+            }),
+        },
+    },
     data() {
         return {
             loading: true,
-            stock: [],
+            stock: [], // 存储所有正库存数据
             warehouses: [],
             myChart: null,
             query: {
@@ -69,13 +43,13 @@ export default {
                     id: "",
                 },
             },
-            _isDestroyed: false, // 添加组件销毁标记
+            _isDestroyed: false, // 组件销毁标记
             loadingWarehouses: false, // 防止重复请求和提供用户反馈
         };
     },
 
     methods: {
-        // 新增：处理过长文本的方法
+        // 处理过长文本的方法
         truncateText(text, maxLength = 8) {
             if (!text) return "未知物品";
             if (text.length <= maxLength) return text;
@@ -84,65 +58,37 @@ export default {
 
         onRefresh() {
             if (this._isDestroyed) return;
-            this.loadStockEarly();
-            this.loadGetWarehouses();
+            this.loadPositiveStock();
         },
-        // 获取仓库
-        loadGetWarehouses(query = "") {
-            if (this.loadingWarehouses) return; // 防止重复请求
 
-            this.loadingWarehouses = true;
-            let params = { limit: 20 };
-
-            // 仅在查询不为空且长度大于0时添加搜索参数
-            if (typeof query === "string" && query.trim() !== "") {
-                // 仅在查询不为空且长度大于0时添加搜索参数
-                params = { name: query.trim(), ...params };
-            }
-
-            GetWarehouses(params)
-                .then((res) => {
-                    if (this._isDestroyed) return;
-                    // 验证响应结构
-                    if (res && res.payload && Array.isArray(res.payload.items)) {
-                        this.warehouses = res.payload.items;
-                    } else {
-                        this.warehouses = [];
-                        console.warn("获取仓库信息格式不正确", res);
-                    }
-                })
-                .catch((err) => {
-                    console.error("获取仓库信息失败:", err);
-                    if (!this._isDestroyed) {
-                        this.warehouses = [];
-                        this.$message.error("获取仓库列表失败，请稍后重试");
-                    }
-                })
-                .finally(() => {
-                    if (!this._isDestroyed) {
-                        this.loadingWarehouses = false;
-                    }
-                });
-        },
-        // 远程搜索300ms防抖延迟防抖处理，避免频繁请求
+        // 远程搜索300ms防抖延迟处理
         onRemoteSearch: debounce(function (query = "") {
             const searchQuery = typeof query === "string" ? query.trim() : "";
             if (searchQuery === this.lastWarehouseQuery) return;
             this.lastWarehouseQuery = searchQuery;
             this.loadGetWarehouses(searchQuery);
         }, 300),
-        // 获取库存
-        loadStockEarly() {
+
+        // 获取正库存数据 - 修复了URL参数问题
+        loadPositiveStock() {
             this.loading = true;
-            let params = { limit: 20 };
-            if (this.query.warehouses.id !== "") params = { wd: this.query.warehouses.id, ...params };
-            withDelay(() => StockEarly(params))
+            // 初始化参数对象，确保不会引入多余的引号
+            const params = { limit: 50 };
+
+            // 仅在仓库ID存在且不为空字符串时添加wd参数
+            if (this.query.warehouses?.id && typeof this.query.warehouses.id === "string" && this.query.warehouses.id.trim() !== "") {
+                params.wd = this.query.warehouses.id.trim(); // 去除可能的前后空格
+            }
+
+            withDelay(() => PositiveStock(params))
                 .then((res) => {
                     if (this._isDestroyed) return;
+                    // PositiveStock返回的都是大于0的库存，直接赋值
                     this.stock = res.payload?.items || [];
                     this.updateChart();
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.error("获取库存数据失败:", error);
                     if (!this._isDestroyed) {
                         this.stock = [];
                         this.updateChart();
@@ -154,6 +100,7 @@ export default {
                     }
                 });
         },
+
         initChart() {
             if (this._isDestroyed) return;
 
@@ -237,6 +184,7 @@ export default {
                 this.myChart = null;
             }
         },
+
         updateChart() {
             if (this._isDestroyed || !this.myChart) {
                 return;
@@ -257,8 +205,9 @@ export default {
                 console.error("图表更新失败:", error);
             }
         },
+
         getChartOption(stockData) {
-            // 使用新增的截断方法处理物品名称
+            // 使用截断方法处理物品名称
             const xAxisData = stockData.map((item) => this.truncateText(item.name, 8));
             const availableData = stockData.map((item) => parseFloat(item.available || 0));
             const lockData = stockData.map((item) => parseFloat(item.lock || 0));
@@ -276,7 +225,7 @@ export default {
             return {
                 title: {
                     show: true,
-                    text: "库存预警",
+                    text: "库存情况",
                     left: "left",
                     top: "auto",
                     textStyle: {
@@ -364,12 +313,16 @@ export default {
     },
     created() {
         this._isDestroyed = false;
-        this.$globalBus.emit("updateActivePath", "/overview");
+        this.$globalBus.emit("updateActivePath", "/overview/stock");
         this.onRefresh();
+        this.$globalBus.on("onRefresh", () => {
+            this.onRefresh();
+        });
     },
     beforeUnmount() {
         this._isDestroyed = true;
         this.$globalBus.off("updateActivePath");
+        this.$globalBus.off("onRefresh");
         window.removeEventListener(
             "resize",
             () => {
@@ -387,6 +340,16 @@ export default {
             if (!this._isDestroyed && this.myChart) {
                 this.myChart.resize();
             }
+        },
+        vdata: {
+            deep: true,
+            immediate: true,
+            handler(newVal) {
+                if (newVal) {
+                    this.query = { ...newVal };
+                    this.onRefresh();
+                }
+            },
         },
     },
 };

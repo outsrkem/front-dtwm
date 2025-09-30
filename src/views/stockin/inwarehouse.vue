@@ -29,7 +29,8 @@
         @pageChange="onCurrentChange"
         @sizeChange="onSizeChange"
         @addSelectedItems="onAddItemTolist"
-        @selectionChange="handleSelectionChange" />
+        @selectionChange="handleSelectionChange"
+        @update:historySupplement="handleHistorySupplementChange" />
 </template>
 
 <script lang="ts">
@@ -87,6 +88,11 @@ export default {
                 supplier: "",
                 items: [],
                 remark: "",
+                // 添加history属性以存储补历史单相关信息
+                history: {
+                    supplement: false,
+                    operation_time: null,
+                },
             },
             classification: [],
             warehouses: [],
@@ -112,6 +118,19 @@ export default {
         this.loadInitialData();
     },
     methods: {
+        // 添加处理补历史单状态变化的方法
+        handleHistorySupplementChange(checked) {
+            // 确保history对象存在
+            if (!this.basic.history) {
+                this.basic.history = {
+                    supplement: false,
+                    operation_time: null,
+                };
+            }
+            // 更新补历史单状态
+            this.basic.history.supplement = checked;
+        },
+
         loadInitialData() {
             this.loadGetClassification();
             this.loadGetWarehouses();
@@ -291,6 +310,8 @@ export default {
                 supplier: { id: this.basic.supplier },
                 item: items,
                 remark: this.basic.remark,
+                // 包含历史单相关数据
+                history: this.basic.history,
             };
 
             withDelay(() => InStock(data))
