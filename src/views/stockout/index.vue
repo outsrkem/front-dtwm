@@ -26,7 +26,7 @@
                     </div>
                 </div>
             </template>
-            <el-table :data="order" style="width: 100%" v-loading="loading">
+            <!-- <el-table :data="order" style="width: 100%" v-loading="loading">
                 <el-table-column label="业务单据" width="300">
                     <template #default="scope">
                         <span :class="{ 'text-red': scope.row.supplement === 1 }">
@@ -74,7 +74,47 @@
                         </el-space>
                     </template>
                 </el-table-column>
-            </el-table>
+            </el-table> -->
+            <MyTable :data="order" :columns="columns" :rowStyle="handleRowStyle" v-loading="loading">
+                <template #status="{ row }">
+                    <!-- 状态标识点 -->
+                    <span class="status-dot" :class="getStatusConfig(row.status).class" :title="getStatusConfig(row.status).label"></span>
+                    <!-- 中文状态文本 -->
+                    <span class="status-text">
+                        {{ getStatusConfig(row.status).label }}
+                    </span>
+                </template>
+                <template #create_time="{ row }">
+                    {{ formatDate(row.create_time) }}
+                </template>
+                <template #operation_time="{ row }">
+                    {{ formatDate(row.operation_time) }}
+                </template>
+                <template #operation="{ row }">
+                    <el-space>
+                        <el-button link type="primary" @click="onLookParticulars(row)">明细</el-button>
+                        <el-button link type="primary" @click="onPrint(row)">打印</el-button>
+                        <el-button link type="primary" @click="onOpenDealWith(row)">处理</el-button>
+                        <el-dropdown trigger="click" placement="bottom-end">
+                            <el-button link type="primary">更多</el-button>
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <div v-if="row.status === 'COMPLETED'">
+                                        <el-dropdown-item>
+                                            <el-button link type="primary" @click="onReversal(row)">红冲</el-button>
+                                        </el-dropdown-item>
+                                    </div>
+                                    <div v-if="row.status === 'PENDING'">
+                                        <el-dropdown-item>
+                                            <el-button link type="primary" @click="onUpdateOrder(row)">编辑</el-button>
+                                        </el-dropdown-item>
+                                    </div>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+                    </el-space>
+                </template>
+            </MyTable>
             <div class="pagination">
                 <div>
                     <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
@@ -86,6 +126,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { Refresh, Search } from "@element-plus/icons-vue";
 import pagination from "../../components/pagination/pagination.vue";
 import Status from "./status.vue";
@@ -97,7 +138,7 @@ import { getSuatusOption } from "../../utils/status.js";
 
 export default {
     name: "HomeIndex",
-    components: { pagination, Status },
+    components: { pagination, Status, MyTable },
     props: {},
     setup() {
         return {
@@ -119,12 +160,29 @@ export default {
                 status: [],
                 serial: "",
             },
+            columns: [
+                { label: "业务单据", prop: "serial" },
+                { label: "仓库", prop: "warehouse.name" },
+                { label: "类型", prop: "classification.name" },
+                { label: "提交人", prop: "owner.username" },
+                { label: "状态", slot: "status" },
+                { label: "创建时间", slot: "create_time" },
+                { label: "出库时间", slot: "operation_time" },
+                { label: "操作", slot: "operation" },
+            ],
         };
     },
     methods: {
         getStatusConfig,
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
+        },
+        handleRowStyle(row, index) {
+            const styles = {};
+            if (row.supplement === 1) {
+                styles.backgroundColor = "#e8f5f7"; // 补历史单行，呼吸感浅青色
+            }
+            return styles;
         },
         loadGetstockorder: function (page_size, page) {
             this.loading = true;

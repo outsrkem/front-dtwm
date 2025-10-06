@@ -4,6 +4,11 @@ export function formatTime(value) {
     return {
         value,
         format(format = "YYYY-MM-DD HH:mm:ss") {
+            // 当value小于等于0时，返回"--"
+            if (value <= 0) {
+                return "--";
+            }
+            // 否则正常格式化时间
             return dayjs(this.value).format(format);
         },
     };

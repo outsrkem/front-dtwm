@@ -4,7 +4,7 @@
             <template #header>
                 <div class="my_refresh">
                     <div>
-                        <span>自定义日期出入库汇总</span>
+                        <span>自定义日期汇总</span>
                     </div>
                     <div>
                         <el-space>
@@ -58,9 +58,11 @@
                     </div>
                 </div>
             </template>
-            <el-table :data="summary" style="width: 100%" v-loading="loading">
+            <!-- <el-table :data="summary" style="width: 100%" v-loading="loading">
                 <el-table-column prop="item.sku" label="SKU" width="180" />
-                <el-table-column prop="item.name" label="物品" width="180" />
+                <el-table-column label="物品" width="180">
+                    <template #default="scope"> {{ scope.row.item.name }}/{{ scope.row.item.property }}/{{ scope.row.item.specification }} </template>
+                </el-table-column>
                 <el-table-column prop="total_inbound_qty" label="累计入库总量" width="180" />
                 <el-table-column prop="total_outbound_qty" label="累计出库总量" width="180" />
                 <el-table-column prop="net_inventory_change" label="库存净变化" width="180" />
@@ -68,7 +70,12 @@
                 <el-table-column prop="inbound_reversal_qty" label="入库红冲量" width="180" />
                 <el-table-column prop="original_outbound_qty" label="原始出库量" width="180" />
                 <el-table-column prop="outbound_reversal_qty" label="出库红冲量" width="180" />
-            </el-table>
+            </el-table> -->
+            <MyTable :data="summary" :columns="columns" v-loading="loading">
+                <template #item="{ row }">
+                    <span> {{ row.item.name }}/{{ row.item.property }}/{{ row.item.specification }} </span>
+                </template>
+            </MyTable>
             <div class="pagination" v-if="pageTotal > 0">
                 <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
             </div>
@@ -78,6 +85,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { debounce } from "lodash-es";
 import { msgcon } from "../../utils/message.js";
 import { Refresh, Search, Download } from "@element-plus/icons-vue";
@@ -89,6 +97,7 @@ export default {
     name: "CustomCollect",
     components: {
         pagination,
+        MyTable,
     },
     setup() {
         return {
@@ -125,6 +134,17 @@ export default {
                     id: "",
                 },
             },
+            columns: [
+                { label: "SKU", prop: "item.sku" },
+                { label: "物品", slot: "item" },
+                { label: "累计入库总量", prop: "total_inbound_qty" },
+                { label: "累计出库总量", prop: "total_outbound_qty" },
+                { label: "库存净变化", prop: "net_inventory_change" },
+                { label: "原始入库量", prop: "original_inbound_qty" },
+                { label: "入库红冲量", prop: "inbound_reversal_qty" },
+                { label: "原始出库量", prop: "original_outbound_qty" },
+                { label: "出库红冲量", prop: "outbound_reversal_qty" },
+            ],
         };
     },
     methods: {
@@ -320,12 +340,26 @@ export default {
 
             try {
                 // 1. 准备表头
-                const headers = ["SKU", "物品", "累计入库总量", "累计出库总量", "库存净变化", "原始入库量", "入库红冲量", "原始出库量", "出库红冲量"];
+                const headers = [
+                    "SKU",
+                    "物品",
+                    "属性",
+                    "规格",
+                    "累计入库总量",
+                    "累计出库总量",
+                    "库存净变化",
+                    "原始入库量",
+                    "入库红冲量",
+                    "原始出库量",
+                    "出库红冲量",
+                ];
 
                 // 2. 准备数据行
                 const dataRows = this.summary.map((item) => [
                     item.item?.sku || "",
                     item.item?.name || "",
+                    item.item?.property || "",
+                    item.item?.specification || "",
                     item.total_inbound_qty || 0,
                     item.total_outbound_qty || 0,
                     item.net_inventory_change || 0,

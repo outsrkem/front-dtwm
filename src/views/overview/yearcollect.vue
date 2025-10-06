@@ -4,7 +4,7 @@
             <template #header>
                 <div class="my_refresh">
                     <div>
-                        <span>年度出入库汇总</span>
+                        <span>年度汇总</span>
                         <span style="padding-left: 5px; padding-right: 5px"></span>
                     </div>
                     <div>
@@ -45,9 +45,11 @@
                     </div>
                 </div>
             </template>
-            <el-table :data="summary" style="width: 100%" v-loading="loading">
+            <!-- <el-table :data="summary" style="width: 100%" v-loading="loading">
                 <el-table-column prop="item.sku" label="SKU" width="180" />
-                <el-table-column prop="item.name" label="物品" width="180" />
+                <el-table-column label="物品" width="180">
+                    <template #default="scope"> {{ scope.row.item.name }}/{{ scope.row.item.property }}/{{ scope.row.item.specification }} </template>
+                </el-table-column>
                 <el-table-column prop="total_inbound_qty" label="累计入库总量" width="180" />
                 <el-table-column prop="total_outbound_qty" label="累计出库总量" />
                 <el-table-column prop="net_inventory_change" label="库存净变化" />
@@ -55,7 +57,12 @@
                 <el-table-column prop="inbound_reversal_qty" label="入库红冲量" />
                 <el-table-column prop="original_outbound_qty" label="原始出库量" />
                 <el-table-column prop="outbound_reversal_qty" label="出库红冲量" />
-            </el-table>
+            </el-table> -->
+            <MyTable :data="summary" :columns="columns" v-loading="loading">
+                <template #item="{ row }">
+                    <span> {{ row.item.name }}/{{ row.item.property }}/{{ row.item.specification }} </span>
+                </template>
+            </MyTable>
             <div class="pagination" style="margin-top: 15px; text-align: right">
                 <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
             </div>
@@ -64,6 +71,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { debounce } from "lodash-es";
 import { msgcon } from "../../utils/message.js";
 import { Refresh, Search, Download } from "@element-plus/icons-vue";
@@ -74,7 +82,8 @@ import pagination from "../../components/pagination/pagination.vue";
 export default {
     name: "YearCollect",
     components: {
-        pagination, // 注册分页组件
+        pagination,
+        MyTable, // 注册分页组件
     },
     props: {},
     setup() {
@@ -111,6 +120,17 @@ export default {
                     id: "",
                 },
             },
+            columns: [
+                { label: "SKU", prop: "item.sku" },
+                { label: "物品", slot: "item" },
+                { label: "累计入库总量", prop: "total_inbound_qty" },
+                { label: "累计出库总量", prop: "total_outbound_qty" },
+                { label: "库存净变化", prop: "net_inventory_change" },
+                { label: "原始入库量", prop: "original_inbound_qty" },
+                { label: "入库红冲量", prop: "inbound_reversal_qty" },
+                { label: "原始出库量", prop: "original_outbound_qty" },
+                { label: "出库红冲量", prop: "outbound_reversal_qty" },
+            ],
         };
     },
     methods: {
@@ -284,12 +304,26 @@ export default {
 
             try {
                 // 1. 准备表头
-                const headers = ["SKU", "物品", "累计入库总量", "累计出库总量", "库存净变化", "原始入库量", "入库红冲量", "原始出库量", "出库红冲量"];
+                const headers = [
+                    "SKU",
+                    "物品",
+                    "属性",
+                    "规格",
+                    "累计入库总量",
+                    "累计出库总量",
+                    "库存净变化",
+                    "原始入库量",
+                    "入库红冲量",
+                    "原始出库量",
+                    "出库红冲量",
+                ];
 
                 // 2. 准备数据行
                 const dataRows = this.summary.map((item) => [
                     item.item?.sku || "",
                     item.item?.name || "",
+                    item.item?.property || "",
+                    item.item?.specification || "",
                     item.total_inbound_qty || 0,
                     item.total_outbound_qty || 0,
                     item.net_inventory_change || 0,
@@ -393,4 +427,29 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+table {
+    width: 100%;
+    border-collapse: collapse; /* 合并边框 */
+    font-family: Arial, sans-serif;
+}
+
+/* 表头样式 */
+th {
+    font-weight: bold;
+}
+
+/* 表头和单元格通用样式 */
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+    border: none; /* 去除所有边框 */
+    border-bottom: 1px solid #ddd; /* 仅保留底部横线 */
+}
+
+/* 鼠标悬停效果 */
+tr:hover {
+    background-color: #f5f7fa; /* 灰色背景 */
+}
+</style>

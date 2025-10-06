@@ -1,6 +1,5 @@
 <template>
     <div v-loading="loading">
-        <!-- 零库存展示区域 - 使用与原页面相同的样式 -->
         <div v-if="zeroStock.length > 0" class="zero-stock-section">
             <h3>零库存物品 ({{ zeroStock.length }})</h3>
             <div class="zero-stock-list">
@@ -114,9 +113,7 @@ export default {
 </script>
 
 <style scoped>
-/* 零库存展示样式 - 与原页面保持一致 */
 .zero-stock-section {
-    width: 100%;
     margin: 16px 0;
     padding: 16px;
     background-color: #fff8f8;

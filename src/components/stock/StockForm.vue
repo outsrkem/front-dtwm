@@ -46,6 +46,7 @@
                         <el-checkbox v-model="localHistorySupplement" @change="handleHistoryChange" />
                         <el-date-picker
                             :disabled="!localHistorySupplement"
+                            :disabled-date="disabledFutureDate"
                             v-model="historyTime"
                             type="datetime"
                             placeholder="选择出入库时间"
@@ -411,6 +412,10 @@ export default {
     methods: {
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
+        },
+        disabledFutureDate(date) {
+            // 今天及之前的日期可选，未来日期禁用
+            return date && date > new Date(new Date().setHours(23, 59, 59, 999));
         },
         handleHistoryChange(checked) {
             if (!this.formData.history) {

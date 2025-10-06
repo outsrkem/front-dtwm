@@ -21,11 +21,15 @@
                         <p class="sub-title">{{ printTheme.title.sub }}</p>
                     </div>
 
-                    <div style="margin-bottom: 5px; display: flex; justify-content: space-between">
+                    <div style="margin: 20px 0 5px; display: flex; justify-content: space-between">
                         <div style="display: flex; flex-direction: column; justify-content: flex-end">
                             <div style="display: flex; align-items: flex-end">
                                 <p>提交人：{{ stockorder.owner.username }}</p>
                                 <p style="margin-left: 15px">提交时间：{{ formatDate(stockorder.create_time) }}</p>
+                            </div>
+
+                            <div style="display: flex; align-items: flex-end; margin-top: 5px">
+                                <p>{{ stockorder.type === "OUT" ? "领用单位" : "供应商" }}：{{ stockorder.supplier.name }}</p>
                             </div>
 
                             <div style="display: flex; align-items: flex-end; margin-top: 5px">
@@ -71,11 +75,12 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th colspan="5" style="padding: 8px 12px">{{ currentTheme.table.title.details }}</th>
+                                    <th colspan="6" style="padding: 8px 12px">{{ currentTheme.table.title.details }}</th>
                                 </tr>
                                 <tr>
                                     <th style="padding: 8px 12px">No.</th>
                                     <th style="padding: 8px 12px">物品名称</th>
+                                    <th style="padding: 8px 12px">属性</th>
                                     <th style="padding: 8px 12px">规格</th>
                                     <th style="padding: 8px 12px">单位</th>
                                     <th style="padding: 8px 12px">{{ currentTheme.table.column.quantity }}</th>
@@ -85,6 +90,7 @@
                                 <tr v-for="(val, inx) in OrderDetails" :key="inx">
                                     <td style="text-align: center">{{ inx + 1 }}</td>
                                     <td style="text-align: center">{{ itemName(val) }}</td>
+                                    <td style="text-align: center">{{ val.item.property }}</td>
                                     <td style="text-align: center">{{ val.item.specification }}</td>
                                     <td style="text-align: center">{{ val.item.unit }}</td>
                                     <td style="text-align: center">{{ val.detailedly.quantity }}</td>
@@ -181,6 +187,9 @@ export default {
                 },
                 owner: {
                     username: "",
+                },
+                supplier: {
+                    name: "",
                 },
                 serial: "",
             }, // 单据信息

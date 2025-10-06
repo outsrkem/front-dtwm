@@ -9,14 +9,21 @@
                     </el-row>
                     <el-row>
                         <el-space>
+                            <el-input
+                                v-model="query.name"
+                                style="width: 220px"
+                                placeholder="物品名称(模糊搜索)"
+                                clearable
+                                @clear="onRefresh()"
+                                @change="onSearch()" />
                             <el-button type="success" @click="onCreateItem">新增物品</el-button>
-                            <el-button type="primary" :icon="Refresh" @click="onRefresh" :loading="loading" style="margin-left: 10px">刷新</el-button>
+                            <el-button type="primary" :icon="Refresh" @click="onRefresh" :loading="loading">刷新</el-button>
                         </el-space>
                     </el-row>
                 </div>
             </template>
-            <el-table :data="items" style="width: 100%; overflow-x: auto" v-loading="loading">
-                <el-table-column prop="sku" label="物品编码" show-overflow-tooltip sortable />
+            <!-- <el-table :data="items" style="width: 100%; overflow-x: auto" v-loading="loading">
+                <el-table-column prop="sku" label="物品编码" show-overflow-tooltip />
                 <el-table-column prop="name" label="名称" show-overflow-tooltip sortable min-width="150px" />
                 <el-table-column prop="property" label="属性" show-overflow-tooltip />
                 <el-table-column prop="specification" label="规格" />
@@ -28,14 +35,8 @@
                         <span v-else>下架</span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="weival" label="重量">
-                    <template #default="scope"> {{ scope.row.weival }}{{ scope.row.weiunit }} </template>
-                </el-table-column>
-                <el-table-column prop="volval" label="体积">
-                    <template #default="scope"> {{ scope.row.volval }}{{ scope.row.volunit }} </template>
-                </el-table-column>
                 <el-table-column prop="remark" label="说明" show-overflow-tooltip />
-                <el-table-column prop="update_time" label="更新时间" min-width="200" sortable>
+                <el-table-column prop="update_time" label="更新时间" min-width="120">
                     <template #default="scope">{{ formatDate(scope.row.update_time) }}</template>
                 </el-table-column>
                 <el-table-column label="操作" min-width="120">
@@ -45,7 +46,22 @@
                         <el-button link type="primary" v-if="scope.row.status === 0" @click="onUpItem(scope.row)">上架</el-button>
                     </template>
                 </el-table-column>
-            </el-table>
+            </el-table> -->
+            <MyTable :data="items" :columns="columns" v-loading="loading">
+                <template #status="{ row }">
+                    <span class="status-dot" :class="row.status === 1 ? 'usable' : 'unusable'" />
+                    <span v-if="row.status === 1">上架</span>
+                    <span v-else>下架</span>
+                </template>
+                <template #update_time="{ row }">
+                    {{ formatDate(row.update_time) }}
+                </template>
+                <template #operation="{ row }">
+                    <el-button link type="primary" @click="onEditItem(row)">编辑</el-button>
+                    <el-button link type="danger" v-if="row.status === 1" @click="onDownItem(row)">下架</el-button>
+                    <el-button link type="primary" v-if="row.status === 0" @click="onUpItem(row)">上架</el-button>
+                </template>
+            </MyTable>
             <div class="pagination">
                 <div>
                     <!--分页开始-->
@@ -59,6 +75,7 @@
     </div>
 </template>
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { Refresh } from "@element-plus/icons-vue";
 import pagination from "../../components/pagination/pagination.vue";
 import { formatTime } from "../../utils/date.js";
@@ -69,7 +86,7 @@ import CreateItem from "./create.vue";
 import UpdateItem from "./update.vue";
 export default {
     name: "HomeIndex",
-    components: { pagination, CreateItem, UpdateItem },
+    components: { pagination, CreateItem, UpdateItem, MyTable },
     setup() {
         return {
             Refresh,
@@ -84,6 +101,17 @@ export default {
             items: [],
             loading: true,
             currentItem: null, // 存储当前编辑的物品数据
+            query: { name: "" }, // 物品检索
+            columns: [
+                { label: "物品编码", prop: "sku" },
+                { label: "名称", prop: "name" },
+                { label: "属性", prop: "property" },
+                { label: "规格", prop: "specification" },
+                { label: "单位", prop: "unit" },
+                { label: "状态", slot: "status" },
+                { label: "更新时间", slot: "update_time" },
+                { label: "操作", slot: "operation" },
+            ],
         };
     },
     methods: {
@@ -95,9 +123,10 @@ export default {
             this.currentItem = { ...row };
             this.$refs.UpdateItem.onOpenDialog();
         },
-        loadGetItems: function (page_size, page) {
+        loadGetItems: function (page_size = 10, page = 1) {
             this.loading = true;
-            const params = convertToLimitOffset(page, page_size);
+            let params = convertToLimitOffset(page, page_size);
+            if (this.query.name !== "") params = { ...params, name: this.query.name };
             withDelay(() => GetItems(params))
                 .then((res) => {
                     this.items = res.payload.items;
@@ -134,6 +163,10 @@ export default {
         },
         onRefresh() {
             this.loading = true;
+            this.loadGetItems(this.pageSize, this.page);
+        },
+        onSearch() {
+            if (this.query.name === "") return;
             this.loadGetItems(this.pageSize, this.page);
         },
         onCurrentChange(p) {

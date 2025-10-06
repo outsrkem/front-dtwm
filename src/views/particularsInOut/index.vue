@@ -24,16 +24,16 @@
                                 v-model="query.direction"
                                 :max-collapse-tags="3"
                                 placeholder="选择动作"
-                                style="width: 220px"
+                                style="width: 120px"
                                 clearable
                                 @change="onSearch()">
                                 <el-option key="index" label="入库" value="in" />
                                 <el-option key="index" label="出库" value="out" />
                             </el-select>
-                            <el-select v-model="query.status" :max-collapse-tags="3" placeholder="选择状态" style="width: 220px" clearable @change="onSearch()">
+                            <el-select v-model="query.status" :max-collapse-tags="3" placeholder="选择状态" style="width: 120px" clearable @change="onSearch()">
                                 <el-option v-for="(option, index) in query.statusOptions" :key="index" :label="option.label" :value="option.value" />
                             </el-select>
-                            <el-input v-model="query.serial" style="width: 340px" placeholder="输入业务单据" clearable @clear="onSearch()" />
+                            <el-input v-model="query.serial" style="width: 240px" placeholder="输入业务单据" clearable @clear="onSearch()" />
                             <el-input v-model="query.name" style="width: 180px" placeholder="物品名称(模糊搜索)" clearable @clear="onSearch()" />
                             <el-button :icon="Search" type="success" @click="onSearch()" :loading="loading">检索</el-button>
                             <el-button type="primary" :icon="Refresh" @click="onRefresh()" :loading="loading">刷新</el-button>
@@ -41,7 +41,7 @@
                     </div>
                 </div>
             </template>
-            <el-table :data="particularsdata" style="width: 100%" v-loading="loading">
+            <!-- <el-table :data="particularsdata" style="width: 100%" v-loading="loading">
                 <el-table-column label="业务单据" min-width="100px">
                     <template #default="scope">
                         <span :class="{ 'text-red': scope.row.order.supplement === 1 }">
@@ -55,8 +55,9 @@
                         {{ scope.row.order.type === "IN" ? "入库" : scope.row.order.type === "OUT" ? "出库" : scope.row.order.type }}
                     </template>
                 </el-table-column>
-
-                <el-table-column prop="item.name" label="物品名称" min-width="100" />
+                <el-table-column label="物品" min-width="100">
+                    <template #default="scope"> {{ scope.row.item.name }}/{{ scope.row.item.property }}/{{ scope.row.item.specification }} </template>
+                </el-table-column>
                 <el-table-column prop="detailedly.quantity" label="出入库数量" width="120" />
                 <el-table-column prop="item.unit" label="单位" width="150" />
                 <el-table-column prop="status" label="状态" width="100">
@@ -80,7 +81,27 @@
                 <el-table-column label="提交时间" width="260">
                     <template #default="scope">{{ formatDate(scope.row.detailedly.create_time) }}</template>
                 </el-table-column>
-            </el-table>
+            </el-table> -->
+            <MyTable :data="particularsdata" :columns="columns" :rowStyle="handleRowStyle" v-loading="loading">
+                <template #ordertype="{ row }">
+                    <span> {{ row.order.type === "IN" ? "入库" : row.order.type === "OUT" ? "出库" : row.order.type }}</span>
+                </template>
+                <template #item="{ row }">
+                    <span> {{ row.item.name }}/{{ row.item.property }}/{{ row.item.specification }}</span>
+                </template>
+                <template #status="{ row }">
+                    <span class="status-dot" :class="getStatusConfig(row.detailedly.status).class" :title="getStatusConfig(row.detailedly.status).label"></span>
+                    <span class="status-text">
+                        {{ getStatusConfig(row.detailedly.status).label }}
+                    </span>
+                </template>
+                <template #create_time="{ row }">
+                    {{ formatDate(row.detailedly.create_time) }}
+                </template>
+                <template #operation_time="{ row }">
+                    {{ formatDate(row.order.operation_time) }}
+                </template>
+            </MyTable>
             <div class="pagination">
                 <div>
                     <!--分页开始-->
@@ -93,6 +114,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { debounce } from "lodash-es";
 import dayjs from "dayjs";
 import { Refresh, Search } from "@element-plus/icons-vue";
@@ -104,7 +126,7 @@ import { getSuatusOption } from "../../utils/status.js";
 import { getStatusConfig } from "../../utils/status.js";
 export default {
     name: "ParticularsIndex",
-    components: { pagination },
+    components: { pagination, MyTable },
     props: {},
     setup() {
         return {
@@ -131,12 +153,34 @@ export default {
             },
             warehouses: [],
             loadingWarehouses: false,
+            columns: [
+                { label: "业务单据", prop: "order.serial" },
+                { label: "仓库", prop: "warehouse.name" },
+                { label: "动作", slot: "ordertype" },
+                { label: "物品", slot: "item" },
+                { label: "出入库数量", prop: "detailedly.quantity" },
+                { label: "单位", prop: "item.unit" },
+                { label: "状态", slot: "status" },
+                { label: "提交时间", slot: "create_time" },
+                { label: "出入库时间", slot: "operation_time" },
+            ],
         };
     },
     methods: {
         getStatusConfig,
         formatDate(time) {
+            if (time <= 0) return "--";
             return dayjs(time).format("YYYY-MM-DD HH:mm:ss");
+        },
+        handleRowStyle(row, index) {
+            const styles = {};
+            if (row.order.supplement === 1) {
+                styles.backgroundColor = "#e8f5f7"; // 补历史单行，呼吸感浅青色
+            }
+            if (row.detailedly.correct_type === "REVERSAL") {
+                styles.color = "#e74c3c"; // 红冲行淡红色
+            }
+            return styles;
         },
         loadGetParticulars: function (page_size = 10, page = 1) {
             this.loading = true;

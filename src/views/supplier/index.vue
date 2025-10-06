@@ -14,7 +14,7 @@
                 </div>
             </template>
             <!-- 表格：删除按钮关联loading状态 -->
-            <el-table :data="items" style="width: 100%" v-loading="loading">
+            <!-- <el-table :data="items" style="width: 100%" v-loading="loading">
                 <el-table-column prop="name" label="名称" show-overflow-tooltip />
                 <el-table-column prop="person" label="联系人" show-overflow-tooltip />
                 <el-table-column label="状态">
@@ -28,8 +28,6 @@
                 <el-table-column prop="update_time" label="更新时间" width="180">
                     <template #default="scope">{{ formatDate(scope.row.update_time) }}</template>
                 </el-table-column>
-
-                <!-- 在表格的操作列中添加编辑按钮 -->
                 <el-table-column label="操作" min-width="120">
                     <template #default="scope">
                         <el-space>
@@ -40,8 +38,23 @@
                         </el-space>
                     </template>
                 </el-table-column>
-            </el-table>
-
+            </el-table> -->
+            <MyTable :data="items" :columns="columns" v-loading="loading">
+                <template #status="{ row }">
+                    <span class="status-dot" :class="row.status === 1 ? 'usable' : 'unusable'" />
+                    <span v-if="row.status === 1">启用</span>
+                    <span v-else>禁用</span>
+                </template>
+                <template #update_time="{ row }">{{ formatDate(row.update_time) }}</template>
+                <template #operation="{ row }">
+                    <el-space>
+                        <el-button link type="primary" @click="onEditSupplier(row)"> 编辑 </el-button>
+                        <el-button link type="danger" v-if="row.status === 1" @click="onDisableSupplier(row)"> 禁用 </el-button>
+                        <el-button link type="primary" v-if="row.status === 0" @click="onEnableSupplier(row)"> 启用 </el-button>
+                        <el-button link type="danger" @click="onDeleteSupplier(row)"> 删除 </el-button>
+                    </el-space>
+                </template>
+            </MyTable>
             <!-- 分页组件 -->
             <div class="pagination">
                 <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
@@ -55,6 +68,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { Refresh } from "@element-plus/icons-vue";
 import pagination from "../../components/pagination/pagination.vue";
 import { formatTime } from "../../utils/date.js";
@@ -66,7 +80,7 @@ import UpdateSupplier from "./update.vue";
 
 export default {
     name: "CreateSupplierIndex",
-    components: { pagination, CreateSupplier, UpdateSupplier },
+    components: { pagination, CreateSupplier, UpdateSupplier, MyTable },
     setup() {
         return {
             Refresh,
@@ -83,6 +97,14 @@ export default {
             // 删除相关状态：仅保留loading（无需弹窗状态）
             deleteLoading: {}, // 按客户ID存储删除按钮loading状态
             currentSupplier: null, // 存储当前要编辑的客户数据
+            columns: [
+                { label: "名称", prop: "name" },
+                { label: "联系人", prop: "person" },
+                { label: "状态", slot: "status" },
+                { label: "备注", prop: "remark" },
+                { label: "更新时间", slot: "update_time" },
+                { label: "操作", slot: "operation" },
+            ],
         };
     },
     methods: {

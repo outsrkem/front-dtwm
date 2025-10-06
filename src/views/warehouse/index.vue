@@ -13,7 +13,7 @@
                     </el-row>
                 </div>
             </template>
-            <el-table :data="items" v-loading="loading">
+            <!-- <el-table :data="items" v-loading="loading">
                 <el-table-column prop="name" label="仓库名称" />
                 <el-table-column prop="location" label="仓库地址" />
                 <el-table-column prop="update_time" label="更新时间" width="200">
@@ -29,7 +29,17 @@
                         <el-button link type="danger" @click="onDeleteWarehouse(scope.row)">删除</el-button>
                     </template>
                 </el-table-column>
-            </el-table>
+            </el-table> -->
+            <MyTable :data="items" :columns="columns" v-loading="loading">
+                <template #update_time="{ row }">{{ formatDate(row.update_time) }}</template>
+                <template #create_time="{ row }">{{ formatDate(row.create_time) }}</template>
+                <template #operation="{ row }">
+                    <el-button link type="primary" @click="onUpdateWarehouse(row)">编辑</el-button>
+                    <el-button link type="primary" @click="onPurview(row)">授权</el-button>
+                    <el-button link type="danger" @click="onDeleteWarehouse(row)">删除</el-button>
+                </template>
+            </MyTable>
+
             <div class="pagination">
                 <pagination :pageTotal="pageTotal" :pageSize="pageSize" @CurrentChange="onCurrentChange" @SizeChange="onSizeChange" />
             </div>
@@ -42,6 +52,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import CreateWarehouse from "./create.vue";
 import DeleteWarehouses from "./delete.vue";
 import UpdateWarehouse from "./update.vue";
@@ -53,7 +64,7 @@ import { GetWarehouses } from "../../api/index.js";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 export default {
     name: "HomeIndex",
-    components: { pagination, CreateWarehouse, DeleteWarehouses, Purview, UpdateWarehouse },
+    components: { pagination, CreateWarehouse, DeleteWarehouses, Purview, UpdateWarehouse, MyTable },
     props: {},
     setup() {
         return {
@@ -68,6 +79,13 @@ export default {
             loading: true,
             items: [],
             deletearray: [],
+            columns: [
+                { label: "仓库名称", prop: "name" },
+                { label: "仓库地址", prop: "location" },
+                { label: "更新时间", slot: "update_time" },
+                { label: "创建时间", slot: "create_time" },
+                { label: "操作", slot: "operation" },
+            ],
         };
     },
     methods: {

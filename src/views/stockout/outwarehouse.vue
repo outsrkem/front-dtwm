@@ -157,7 +157,7 @@ export default {
         },
 
         loadGetClassification() {
-            GetClassification()
+            GetClassification({ t: "out" })
                 .then((res) => {
                     this.classification = res.payload.items;
                 })

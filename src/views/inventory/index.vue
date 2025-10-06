@@ -14,7 +14,7 @@
                             </el-select>
                             <el-input
                                 v-model="query.serial"
-                                style="width: 340px"
+                                style="width: 220px"
                                 placeholder="输入物品名称"
                                 clearable
                                 @clear="onRefresh"
@@ -25,7 +25,7 @@
                     </div>
                 </div>
             </template>
-            <el-table :data="inventory" style="width: 100%" v-loading="loading">
+            <!-- <el-table :data="inventory" style="width: 100%" v-loading="loading">
                 <el-table-column prop="warehouse.name" label="仓库" show-overflow-tooltip />
                 <el-table-column prop="name" label="名称" show-overflow-tooltip min-width="150px" />
                 <el-table-column prop="property" label="属性" show-overflow-tooltip />
@@ -44,7 +44,17 @@
                 <el-table-column prop="update_time" label="更新时间" width="200" sortable>
                     <template #default="scope">{{ formatDate(scope.row.update_time) }}</template>
                 </el-table-column>
-            </el-table>
+            </el-table> -->
+            <MyTable :data="inventory" :columns="columns" v-loading="loading">
+                <template #status="{ row }">
+                    <span class="status-dot" :class="row.status === 1 ? 'usable' : 'unusable'" />
+                    <span v-if="row.status === 1">上架</span>
+                    <span v-else>下架</span>
+                </template>
+                <template #update_time="{ row }">
+                    {{ formatDate(row.update_time) }}
+                </template>
+            </MyTable>
             <div class="pagination">
                 <div>
                     <!--分页开始-->
@@ -57,6 +67,7 @@
 </template>
 
 <script>
+import MyTable from "../../components/MyTable/MyTable.vue";
 import { Refresh, Search } from "@element-plus/icons-vue";
 import pagination from "../../components/pagination/pagination.vue";
 import { msgcon } from "../../utils/message.js";
@@ -67,6 +78,7 @@ export default {
     name: "InventoryIndex",
     components: {
         pagination,
+        MyTable,
     },
     setup() {
         return {
@@ -87,6 +99,18 @@ export default {
                 warehouses: { id: "" },
                 serial: "",
             },
+            columns: [
+                { label: "仓库", prop: "warehouse.name" },
+                { label: "名称", prop: "name" },
+                { label: "属性", prop: "property" },
+                { label: "规格", prop: "specification" },
+                { label: "单位", prop: "unit" },
+                { label: "物品状态", slot: "status" },
+                { label: "总库存", prop: "current" },
+                { label: "可用库存", prop: "available" },
+                { label: "锁定库存", prop: "lock" },
+                { label: "更新时间", slot: "update_time" },
+            ],
         };
     },
     methods: {

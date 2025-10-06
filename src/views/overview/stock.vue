@@ -31,7 +31,7 @@
         </div>
         <div style="padding-top: 10px">
             <el-card>
-                <ZeroStockSimple />
+                <ZeroStockSimple :vdata="query" />
             </el-card>
         </div>
     </div>
