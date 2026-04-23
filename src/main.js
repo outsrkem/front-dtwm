@@ -3,6 +3,7 @@ import ElementPlus from "element-plus";
 import router from "./router";
 import EventBusPlugin from "./utils/event-bus.js";
 import "element-plus/dist/index.css";
+import "./styles/normalize.css";
 import "./styles/index.less";
 import App from "./App.vue";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
