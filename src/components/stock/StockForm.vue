@@ -47,6 +47,7 @@
                         <el-date-picker
                             :disabled="!localHistorySupplement"
                             :disabled-date="disabledFutureDate"
+                            :show-now="false"
                             v-model="historyTime"
                             type="datetime"
                             placeholder="选择出入库时间"
@@ -76,7 +77,6 @@
                             <th>
                                 <el-text>{{ labels.tableUnit }}</el-text>
                             </th>
-                            <!-- 出库特有字段 -->
                             <template v-if="direction === 'out'">
                                 <th>
                                     <el-text>{{ labels.tableTotalStock }}</el-text>
@@ -173,7 +173,6 @@
             </div>
 
             <el-table :data="items" style="width: 100%" @selection-change="$emit('selectionChange', $event)" v-loading="loading">
-                <!-- 根据已选物品ID列表决定是否禁用选择框 -->
                 <el-table-column type="selection" width="55" :selectable="(row) => !selectedItemIds.includes(row.id)" />
                 <el-table-column v-if="direction === 'out'" prop="warehouse.name" :label="labels.tableWarehouse" show-overflow-tooltip />
                 <el-table-column prop="name" :label="labels.tableName" show-overflow-tooltip />
@@ -361,7 +360,6 @@ export default {
     data() {
         return {
             historyTime: this.formData.history.operation_time || null,
-            // 本地维护补历史单的勾选状态
             localHistorySupplement: this.formData?.history?.supplement || false,
         };
     },
@@ -376,9 +374,27 @@ export default {
             },
             immediate: true,
         },
-        historyTime(newVal) {
+
+        // 核心：监听 historyTime 自动补时间，不用change
+        historyTime(newVal, oldVal) {
+            if (!newVal || !this.localHistorySupplement) return;
+            // 避免循环监听：新旧值格式化后一样就不处理
+            if (newVal === oldVal) return;
+
+            const date = new Date(newVal);
+            // 仅当时分秒都是0时，才填充当前时间
+            if (date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0) {
+                const now = new Date();
+                date.setHours(now.getHours());
+                date.setMinutes(now.getMinutes());
+                date.setSeconds(now.getSeconds());
+                // 赋值会触发一次watch，靠上面newVal===oldVal拦截循环
+                this.historyTime = date.toISOString();
+            }
+
+            // 同步到formData
             if (this.formData?.history) {
-                this.formData.history.operation_time = newVal;
+                this.formData.history.operation_time = this.historyTime;
             }
         },
     },
@@ -470,7 +486,6 @@ export default {
                         })),
                         remark: this.formData.remark || "",
                     };
-
                     this.$emit("submit", submitData);
                 }
             });
@@ -483,25 +498,21 @@ export default {
 .form-inline .el-input {
     --el-input-width: 330px;
 }
-
 .form-inline .el-select {
     --el-select-width: 330px;
 }
-
 table {
     border-collapse: collapse;
     width: 100%;
     margin: 0px auto;
     border: 1px solid #ddd;
 }
-
 th,
 td {
     border: 1px solid #ddd;
     padding: 5px;
     text-align: left;
 }
-
 th {
     height: 35px;
     background-color: #f2f2f2;
@@ -521,7 +532,6 @@ th {
 .unusable {
     background-color: #ffb700;
 }
-
 .warning-desc {
     width: 500px;
     padding-left: 10px;
@@ -534,7 +544,6 @@ th {
     position: relative;
     min-height: 28px;
 }
-
 .warning-desc p {
     margin: 4px 0;
     font-size: 14px;
@@ -544,12 +553,10 @@ th {
     animation: scroll-left 15s linear infinite;
     animation-play-state: running;
 }
-
 .warning-desc p::after {
     content: attr(data-text);
     margin-left: 30px;
 }
-
 @keyframes scroll-left {
     0% {
         transform: translateX(100%);
@@ -558,7 +565,6 @@ th {
         transform: translateX(calc(-100% - 30px));
     }
 }
-
 .warning-desc:hover p {
     animation-play-state: running !important;
 }

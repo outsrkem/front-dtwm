@@ -22,10 +22,12 @@ export default defineConfig({
             "/api": {
                 target: "https://uias.localvm.outsrkem.top:30078",
                 changeOrigin: true,
+                secure: false,
             },
             "/authui": {
                 target: "https://uias.localvm.outsrkem.top:30078",
                 changeOrigin: true,
+                secure: false,
             },
         },
     },
