@@ -1,3 +1,4 @@
+<!-- 出入库单据打印 -->
 <template>
     <div style="margin-bottom: 50px">
         <!-- 固定顶部的横条 -->
@@ -47,7 +48,7 @@
                             </div>
                         </div>
                         <div>
-                            <vue-qr :text="stockorder.serial" :correctLevel="1" :size="100" :margin="8"></vue-qr>
+                            <SvgQrcode :content="stockorder.serial" :size="85" :padding="2" />
                         </div>
                     </div>
 
@@ -122,7 +123,7 @@
 <script>
 import dayjs from "dayjs";
 import { msgcon } from "../../utils/message.js";
-import vueQr from "vue-qr/src/packages/vue-qr.vue";
+import SvgQrcode from "../../components//SvgQrcode/SvgQrcode.vue";
 import { formatTime } from "../../utils/date.js";
 import { withDelay } from "../../utils/common.js";
 import { getStatusConfig } from "../../utils/status.js";
@@ -130,7 +131,7 @@ import { printTheme } from "../../utils/theme.js";
 import { GetOrderDetails, GetParticulars, GetPrintTheme } from "../../api/index.js";
 export default {
     name: "PrintPageIndex",
-    components: { vueQr },
+    components: { SvgQrcode },
     props: {},
     data() {
         return {
