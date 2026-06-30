@@ -85,9 +85,6 @@ export default {
             let rawSvg = qr.svg();
             // Remove line breaks and blank spaces to eliminate bottom blank line
             rawSvg = rawSvg.trim().replace(/[\n\r]+/g, "");
-            // Force override svg root width & height to avoid size overflow
-            rawSvg = rawSvg.replace(/<svg([^>]+)width="[0-9.]+"/, `<svg$1width="${this.size}"`);
-            rawSvg = rawSvg.replace(/height="[0-9.]+"/, `height="${this.size}"`);
             this.svgHtml = rawSvg;
         },
         // Download svg file locally

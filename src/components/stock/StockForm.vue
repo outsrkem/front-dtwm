@@ -42,7 +42,6 @@
                 <!-- 补历史单功能 -->
                 <el-form-item label="补历史单">
                     <el-space>
-                        <!-- 使用本地数据而非直接绑定props -->
                         <el-checkbox v-model="localHistorySupplement" @change="handleHistoryChange" />
                         <el-date-picker
                             :disabled="!localHistorySupplement"
@@ -210,9 +209,11 @@
 </template>
 
 <script lang="ts">
+import { ElMessageBox } from "element-plus";
 import { Plus, Refresh, Search } from "@element-plus/icons-vue";
-import { formatTime } from "../../utils/date.js";
 import pagination from "../../components/pagination/pagination.vue";
+import { formatTime } from "../../utils/date.js";
+import { msgcon } from "../../utils/message.js";
 
 export default {
     name: "StockForm",
@@ -325,6 +326,7 @@ export default {
                 item: { name: "" },
             }),
         },
+        // 移除 historyTime 的 rules 校验
         rules: {
             type: Object,
             default: () => ({
@@ -377,7 +379,12 @@ export default {
 
         // 核心：监听 historyTime 自动补时间，不用change
         historyTime(newVal, oldVal) {
-            if (!newVal || !this.localHistorySupplement) return;
+            // 清空时间时同步formData
+            if (!newVal) {
+                this.formData.history.operation_time = null;
+                return;
+            }
+            if (!this.localHistorySupplement) return;
             // 避免循环监听：新旧值格式化后一样就不处理
             if (newVal === oldVal) return;
 
@@ -450,6 +457,10 @@ export default {
                 this.historyTime = null;
                 this.formData.history.operation_time = null;
             }
+            // 切换复选框后清除校验提示（如果有的话）
+            if (this.$refs.formRef) {
+                this.$refs.formRef.clearValidate();
+            }
         },
         handleQuantityInput(index) {
             const value = this.formData.items[index].quantity;
@@ -458,37 +469,76 @@ export default {
                 this.formData.items[index].quantity = formatted;
             }
         },
+        // 判断是否跨日
+        isCrossDay(historyTime) {
+            if (!historyTime) return false;
+            const history = new Date(historyTime);
+            const now = new Date();
+            return history.getDate() !== now.getDate() || history.getMonth() !== now.getMonth() || history.getFullYear() !== now.getFullYear();
+        },
+        // 提交主逻辑
         handleSubmit() {
-            this.$refs.formRef.validate((valid) => {
-                if (valid) {
-                    if (!this.formData.items || this.formData.items.length === 0) {
-                        this.$message.error("请至少添加一个物品");
+            // 先校验基础表单
+            this.$refs.formRef.validate(async (valid) => {
+                if (!valid) return;
+
+                // 校验物品列表
+                if (!this.formData.items || this.formData.items.length === 0) {
+                    this.$message.warning(msgcon("请至少添加一个物品"));
+                    return;
+                }
+
+                // 手动校验补历史单逻辑
+                if (this.localHistorySupplement && !this.historyTime) {
+                    this.$message.warning(msgcon("勾选补历史单必须选择出入库时间"));
+                    return;
+                }
+
+                // 如果勾选了补历史单且选择了时间，但未跨日 → 弹窗提示
+                if (this.localHistorySupplement && this.historyTime && !this.isCrossDay(this.historyTime)) {
+                    try {
+                        await ElMessageBox.confirm("历史单所选时间较近，不建议补历史单，是否继续？", "提示", {
+                            confirmButtonText: "继续提交",
+                            cancelButtonText: "返回修改",
+                            type: "warning",
+                            draggable: true,
+                        });
+                        // 用户选择继续提交
+                        this.doRealSubmit();
+                    } catch {
+                        // 用户选择返回修改，不做任何操作
                         return;
                     }
-
-                    const submitData = {
-                        history: {
-                            supplement: this.formData?.history?.supplement || false,
-                            operation_time: this.historyTime || null,
-                        },
-                        warehouse: {
-                            id: this.formData.warehouses,
-                        },
-                        classification: {
-                            id: this.formData.classification,
-                        },
-                        supplier: {
-                            id: this.formData.supplier,
-                        },
-                        item: this.formData.items.map((item) => ({
-                            id: item.id,
-                            quantity: item.quantity || 0,
-                        })),
-                        remark: this.formData.remark || "",
-                    };
-                    this.$emit("submit", submitData);
+                } else {
+                    // 未启用补历史单 或 已跨日 → 直接提交
+                    this.doRealSubmit();
                 }
             });
+        },
+
+        // 执行提交
+        doRealSubmit() {
+            const submitData = {
+                history: {
+                    supplement: this.formData?.history?.supplement || false,
+                    operation_time: this.historyTime || null,
+                },
+                warehouse: {
+                    id: this.formData.warehouses,
+                },
+                classification: {
+                    id: this.formData.classification,
+                },
+                supplier: {
+                    id: this.formData.supplier,
+                },
+                item: this.formData.items.map((item) => ({
+                    id: item.id,
+                    quantity: item.quantity || 0,
+                })),
+                remark: this.formData.remark || "",
+            };
+            this.$emit("submit", submitData);
         },
     },
 };
