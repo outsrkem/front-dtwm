@@ -33,3 +33,11 @@ src/
     └── index.js            # 路由定义（包含库存相关页面路由）
 
 ```
+
+### 开发环境项目运行
+
+创建`.env.local`配置文件,内容为`api`服务器地址
+
+```
+VITE_API_Endpoint=https://api.svc.local:8998
+```
