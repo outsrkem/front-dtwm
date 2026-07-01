@@ -2,6 +2,9 @@
     <StockForm
         direction="out"
         title="创建出库单"
+        v-model="basic"
+        v-model:selectItemValue="selectItem"
+        v-model:queryValue="query"
         :labels="formLabels"
         :classifications="classification"
         :warehouses="warehouses"
@@ -10,10 +13,7 @@
         :pageTotal="pageTotal"
         :pageSize="pageSize"
         :currentPage="page"
-        :formData="basic"
         :loading="loading"
-        :selectItem="selectItem"
-        :query="query"
         :rules="rules"
         :result="result"
         :formRef="formRef"
@@ -85,7 +85,6 @@ export default {
             pageSize: 10,
             page: 1,
             items: [],
-            // 在基础数据中添加历史单相关字段
             basic: {
                 loading: false,
                 classification: "",
@@ -93,9 +92,7 @@ export default {
                 supplier: "",
                 items: [],
                 remark: "",
-                // 历史单标记
                 isHistory: false,
-                // 历史单信息
                 history: {
                     supplement: false,
                     operation_time: null,
@@ -118,17 +115,20 @@ export default {
                 this.loadSelectInventory(this.pageSize, this.page);
             }
         },
-        "basic.items"() {
-            if (this.selectItem.dialogVisible) {
-                this.items = [...this.items];
-            }
+        "basic.items": {
+            handler() {
+                if (this.selectItem.dialogVisible) {
+                    // 刷新物品列表以更新选择状态
+                    this.loadSelectInventory(this.pageSize, this.page);
+                }
+            },
+            deep: true,
         },
     },
     mounted() {
         this.loadInitialData();
     },
     methods: {
-        // 添加历史单状态变更处理
         handleHistorySupplementChange(checked) {
             if (!this.basic.history) {
                 this.basic.history = {
@@ -202,7 +202,9 @@ export default {
                 wd: this.basic.warehouses,
             };
 
-            if (this.query.item.name) Object.assign(params, { name: this.query.item.name });
+            if (this.query.item.name) {
+                Object.assign(params, { name: this.query.item.name });
+            }
 
             withDelay(() => SelectInventory(params))
                 .then((res) => {
@@ -254,10 +256,21 @@ export default {
             }
 
             const existingIds = this.basic.items.map((item) => item.id);
-            const newItems = this.selectedRows.filter((item) => !existingIds.includes(item.id)).map((item) => ({ ...item, quantity: "" }));
+            const newItems = this.selectedRows
+                .filter((item) => !existingIds.includes(item.id))
+                .map((item) => ({
+                    ...item,
+                    quantity: "",
+                    // 确保可用库存字段存在
+                    available: item.available || 0,
+                }));
 
-            this.basic.items.push(...newItems);
+            // 使用数组展开确保响应式更新
+            this.basic.items = [...this.basic.items, ...newItems];
             this.selectItem.dialogVisible = false;
+
+            // 清空选中行
+            this.selectedRows = [];
         },
 
         onRemoveItemlist(index) {
@@ -326,22 +339,26 @@ export default {
             const stockValid = await this.valiItemOutWarehouseForm();
             if (!stockValid) return;
 
-            if (basicValid && stockValid) {
-                this.loadItemOutWarehouse();
-            }
+            this.loadItemOutWarehouse();
         },
 
         loadItemOutWarehouse() {
             this.basic.loading = true;
-            const items = this.basic.items.map((item) => ({ id: item.id, quantity: item.quantity }));
+            const items = this.basic.items.map((item) => ({
+                id: item.id,
+                quantity: Number(item.quantity),
+            }));
+
             const data = {
                 warehouse: { id: this.basic.warehouses },
                 classification: { id: this.basic.classification },
                 supplier: { id: this.basic.supplier },
                 item: items,
-                remark: this.basic.remark,
-                // 包含历史单数据
-                history: this.basic.history,
+                remark: this.basic.remark || "",
+                history: {
+                    supplement: this.basic.history?.supplement || false,
+                    operation_time: this.basic.history?.operation_time || null,
+                },
             };
 
             withDelay(() => ItemOutWarehouse(data))
@@ -349,7 +366,8 @@ export default {
                     this.result = true;
                 })
                 .catch((err) => {
-                    let msg = err.data.metadata.message;
+                    let msg = err.data?.metadata?.message || "";
+                    console.error("创建出库单失败:", err);
                     this.$message.error(msgcon("创建出库单失败" + msg));
                 })
                 .finally(() => {

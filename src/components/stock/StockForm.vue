@@ -8,18 +8,18 @@
             </div>
         </template>
 
-        <div v-if="!result" v-loading="formData.loading">
-            <el-form ref="formRef" label-position="left" :inline="isDesktop" :rules="rules" label-width="auto" :model="formData" class="form-inline">
+        <div v-if="!result" v-loading="localFormData.loading">
+            <el-form ref="formRef" label-position="left" :inline="isDesktop" :rules="rules" label-width="auto" :model="localFormData" class="form-inline">
                 <!-- 业务类型选择 -->
                 <el-form-item :label="labels.classification" prop="classification">
-                    <el-select style="width: 200px" v-model="formData.classification" placeholder="选择类型" clearable filterable>
+                    <el-select style="width: 200px" v-model="localFormData.classification" placeholder="选择类型" clearable filterable>
                         <el-option v-for="(item, inx) in classifications" :key="inx" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
 
                 <!-- 仓库选择 -->
                 <el-form-item :label="labels.warehouse" prop="warehouses">
-                    <el-select style="width: 260px" v-model="formData.warehouses" placeholder="选择仓库" clearable filterable>
+                    <el-select style="width: 260px" v-model="localFormData.warehouses" placeholder="选择仓库" clearable filterable>
                         <el-option v-for="(item, inx) in warehouses" :key="inx" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
@@ -27,7 +27,7 @@
                 <!-- 供应商/领用单位选择 -->
                 <el-form-item :label="labels.supplier" prop="supplier">
                     <el-space>
-                        <el-select style="width: 260px" v-model="formData.supplier" placeholder="选择往来单位" clearable filterable>
+                        <el-select style="width: 260px" v-model="localFormData.supplier" placeholder="选择往来单位" clearable filterable>
                             <el-option v-for="(item, inx) in suppliers" :key="inx" :label="item.name" :value="item.id">
                                 <span style="float: left">{{ item.name }}</span>
                                 <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px">
@@ -96,7 +96,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(item, inx) in formData.items" :key="inx">
+                        <tr v-for="(item, inx) in localFormData.items" :key="inx">
                             <td>{{ inx + 1 }}</td>
                             <td v-if="direction === 'out'">{{ item.warehouse?.name }}</td>
                             <td>{{ item.name }}</td>
@@ -111,7 +111,7 @@
                             </template>
                             <td>
                                 <el-input
-                                    v-model="formData.items[inx].quantity"
+                                    v-model="localFormData.items[inx].quantity"
                                     placeholder="数据范围: (0, 999999.9999], 最大保留4位小数"
                                     @input="handleQuantityInput(inx)" />
                             </td>
@@ -133,9 +133,9 @@
 
             <!-- 备注信息 -->
             <div style="padding-top: 10px">
-                <el-form label-position="left" label-width="auto" :model="formData">
+                <el-form label-position="left" label-width="auto" :model="localFormData">
                     <el-form-item :label="labels.remark" label-position="left">
-                        <el-input v-model="formData.remark" />
+                        <el-input v-model="localFormData.remark" />
                     </el-form-item>
                 </el-form>
             </div>
@@ -157,10 +157,10 @@
         </div>
 
         <!-- 选择物品弹窗 -->
-        <el-dialog v-model="selectItem.dialogVisible" width="1200" :title="labels.selectItemTitle" :draggable="isDesktop">
+        <el-dialog v-model="localSelectItem.dialogVisible" width="1200" :title="labels.selectItemTitle" :draggable="isDesktop">
             <div>
                 <el-space>
-                    <el-input style="width: 340px" v-model="query.item.name" :placeholder="labels.searchPlaceholder" clearable @change="$emit('search')">
+                    <el-input style="width: 340px" v-model="localQuery.item.name" :placeholder="labels.searchPlaceholder" clearable @change="$emit('search')">
                         <template #prefix>
                             <el-icon class="el-input__icon"><Search /></el-icon>
                         </template>
@@ -293,7 +293,8 @@ export default {
             type: Number,
             default: 1,
         },
-        formData: {
+        // 使用 v-model 方式接收 formData
+        modelValue: {
             type: Object,
             default: () => ({
                 loading: false,
@@ -313,20 +314,21 @@ export default {
             type: Boolean,
             default: false,
         },
-        selectItem: {
+        // 使用 v-model 方式接收 selectItem
+        selectItemValue: {
             type: Object,
             default: () => ({
                 dialogVisible: false,
                 loading: true,
             }),
         },
-        query: {
+        // 使用 v-model 方式接收 query
+        queryValue: {
             type: Object,
             default: () => ({
                 item: { name: "" },
             }),
         },
-        // 移除 historyTime 的 rules 校验
         rules: {
             type: Object,
             default: () => ({
@@ -358,57 +360,94 @@ export default {
         "selectionChange",
         "formInstance",
         "update:historySupplement",
+        "update:modelValue",
+        "update:selectItemValue",
+        "update:queryValue",
     ],
     data() {
         return {
-            historyTime: this.formData.history.operation_time || null,
-            localHistorySupplement: this.formData?.history?.supplement || false,
+            historyTime: this.modelValue.history?.operation_time || null,
+            localHistorySupplement: this.modelValue?.history?.supplement || false,
         };
+    },
+    computed: {
+        // 使用 computed 的 getter/setter 实现双向绑定
+        localFormData: {
+            get() {
+                return this.modelValue;
+            },
+            set(value) {
+                this.$emit("update:modelValue", value);
+            },
+        },
+        localSelectItem: {
+            get() {
+                return this.selectItemValue;
+            },
+            set(value) {
+                this.$emit("update:selectItemValue", value);
+            },
+        },
+        localQuery: {
+            get() {
+                return this.queryValue;
+            },
+            set(value) {
+                this.$emit("update:queryValue", value);
+            },
+        },
     },
     setup() {
         return { Plus, Refresh, Search };
     },
     watch: {
-        "formData.history.supplement": {
+        "modelValue.history.supplement": {
             handler(newVal) {
                 this.localHistorySupplement = newVal;
-                this.historyTime = this.formData.history.operation_time;
+                this.historyTime = this.modelValue.history?.operation_time;
             },
             immediate: true,
         },
-
-        // 核心：监听 historyTime 自动补时间，不用change
         historyTime(newVal, oldVal) {
-            // 清空时间时同步formData
             if (!newVal) {
-                this.formData.history.operation_time = null;
+                // 通过 computed setter 更新
+                const newData = {
+                    ...this.localFormData,
+                    history: {
+                        ...this.localFormData.history,
+                        operation_time: null,
+                    },
+                };
+                this.localFormData = newData;
                 return;
             }
             if (!this.localHistorySupplement) return;
-            // 避免循环监听：新旧值格式化后一样就不处理
             if (newVal === oldVal) return;
 
             const date = new Date(newVal);
-            // 仅当时分秒都是0时，才填充当前时间
             if (date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0) {
                 const now = new Date();
                 date.setHours(now.getHours());
                 date.setMinutes(now.getMinutes());
                 date.setSeconds(now.getSeconds());
-                // 赋值会触发一次watch，靠上面newVal===oldVal拦截循环
                 this.historyTime = date.toISOString();
             }
 
-            // 同步到formData
-            if (this.formData?.history) {
-                this.formData.history.operation_time = this.historyTime;
-            }
+            // 通过 computed setter 更新
+            const newData = {
+                ...this.localFormData,
+                history: {
+                    ...this.localFormData.history,
+                    operation_time: this.historyTime,
+                },
+            };
+            this.localFormData = newData;
         },
     },
     mounted() {
-        // 确保formData和history属性存在
-        if (!this.formData) {
-            this.formData = {
+        // 确保 formData 和 history 属性存在
+        if (!this.modelValue || !this.modelValue.history) {
+            const defaultData = {
                 loading: false,
                 classification: "",
                 warehouses: "",
@@ -421,15 +460,11 @@ export default {
                     operation_time: null,
                 },
             };
-        } else if (!this.formData.history) {
-            this.formData.history = {
-                supplement: false,
-                operation_time: null,
-            };
+            this.localFormData = defaultData;
         }
-        console.log("=====", this.formData.history);
-        const a = this.formData.history;
-        this.historyTime = a.operation_time;
+        console.log("=====", this.modelValue.history);
+        const a = this.modelValue.history;
+        this.historyTime = a?.operation_time;
         this.$emit("formInstance", this.$refs.formRef);
     },
     methods: {
@@ -437,64 +472,74 @@ export default {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
         },
         disabledFutureDate(date) {
-            // 今天及之前的日期可选，未来日期禁用
             return date && date > new Date(new Date().setHours(23, 59, 59, 999));
         },
         handleHistoryChange(checked) {
-            if (!this.formData.history) {
-                this.formData.history = {
-                    supplement: false,
-                    operation_time: null,
-                };
-            }
-
             this.localHistorySupplement = checked;
             this.$emit("update:historySupplement", checked);
-            this.formData.isHistory = checked;
-            this.formData.history.supplement = checked;
+
+            // 通过 computed setter 更新
+            const newData = {
+                ...this.localFormData,
+                isHistory: checked,
+                history: {
+                    ...this.localFormData.history,
+                    supplement: checked,
+                    operation_time: checked ? this.historyTime : null,
+                },
+            };
+            this.localFormData = newData;
 
             if (!checked) {
                 this.historyTime = null;
-                this.formData.history.operation_time = null;
+                const resetData = {
+                    ...this.localFormData,
+                    history: {
+                        ...this.localFormData.history,
+                        operation_time: null,
+                    },
+                };
+                this.localFormData = resetData;
             }
-            // 切换复选框后清除校验提示（如果有的话）
+
             if (this.$refs.formRef) {
                 this.$refs.formRef.clearValidate();
             }
         },
         handleQuantityInput(index) {
-            const value = this.formData.items[index].quantity;
+            const value = this.localFormData.items[index].quantity;
             if (value) {
                 const formatted = parseFloat(value.toString().match(/^\d*(\.?\d{0,4})/g)[0] || 0);
-                this.formData.items[index].quantity = formatted;
+                // 通过 computed setter 更新
+                const newItems = [...this.localFormData.items];
+                newItems[index].quantity = formatted;
+                const newData = {
+                    ...this.localFormData,
+                    items: newItems,
+                };
+                this.localFormData = newData;
             }
         },
-        // 判断是否跨日
         isCrossDay(historyTime) {
             if (!historyTime) return false;
             const history = new Date(historyTime);
             const now = new Date();
             return history.getDate() !== now.getDate() || history.getMonth() !== now.getMonth() || history.getFullYear() !== now.getFullYear();
         },
-        // 提交主逻辑
         handleSubmit() {
-            // 先校验基础表单
             this.$refs.formRef.validate(async (valid) => {
                 if (!valid) return;
 
-                // 校验物品列表
-                if (!this.formData.items || this.formData.items.length === 0) {
+                if (!this.localFormData.items || this.localFormData.items.length === 0) {
                     this.$message.warning(msgcon("请至少添加一个物品"));
                     return;
                 }
 
-                // 手动校验补历史单逻辑
                 if (this.localHistorySupplement && !this.historyTime) {
                     this.$message.warning(msgcon("勾选补历史单必须选择出入库时间"));
                     return;
                 }
 
-                // 如果勾选了补历史单且选择了时间，但未跨日 → 弹窗提示
                 if (this.localHistorySupplement && this.historyTime && !this.isCrossDay(this.historyTime)) {
                     try {
                         await ElMessageBox.confirm("历史单所选时间较近，不建议补历史单，是否继续？", "提示", {
@@ -503,40 +548,35 @@ export default {
                             type: "warning",
                             draggable: true,
                         });
-                        // 用户选择继续提交
                         this.doRealSubmit();
                     } catch {
-                        // 用户选择返回修改，不做任何操作
                         return;
                     }
                 } else {
-                    // 未启用补历史单 或 已跨日 → 直接提交
                     this.doRealSubmit();
                 }
             });
         },
-
-        // 执行提交
         doRealSubmit() {
             const submitData = {
                 history: {
-                    supplement: this.formData?.history?.supplement || false,
+                    supplement: this.localFormData?.history?.supplement || false,
                     operation_time: this.historyTime || null,
                 },
                 warehouse: {
-                    id: this.formData.warehouses,
+                    id: this.localFormData.warehouses,
                 },
                 classification: {
-                    id: this.formData.classification,
+                    id: this.localFormData.classification,
                 },
                 supplier: {
-                    id: this.formData.supplier,
+                    id: this.localFormData.supplier,
                 },
-                item: this.formData.items.map((item) => ({
+                item: this.localFormData.items.map((item) => ({
                     id: item.id,
                     quantity: item.quantity || 0,
                 })),
-                remark: this.formData.remark || "",
+                remark: this.localFormData.remark || "",
             };
             this.$emit("submit", submitData);
         },
@@ -545,6 +585,7 @@ export default {
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .form-inline .el-input {
     --el-input-width: 330px;
 }
