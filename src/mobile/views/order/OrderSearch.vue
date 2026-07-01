@@ -270,7 +270,7 @@ export default {
         },
     },
     // 页面离开时确保关闭摄像头
-    beforeDestroy() {
+    beforeUnmount() {
         if (this.stream) {
             this.stream.getTracks().forEach((track) => track.stop());
         }

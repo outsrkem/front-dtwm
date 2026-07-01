@@ -106,7 +106,7 @@
                     <!-- 签字区域 -->
                     <div style="margin-right: 20px" v-if="printTheme.signature.enabled">
                         <div style="display: flex; flex-direction: column; align-items: flex-end; width: 100%">
-                            <span v-for="val in printTheme.signature.items">
+                            <span v-for="val in printTheme.signature.items" :key="val.label">
                                 <span v-if="val.required">
                                     <p style="padding-top: 35px">{{ val.label }}：______________________</p>
                                 </span>

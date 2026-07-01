@@ -5,17 +5,17 @@
             <el-form label-position="top" ref="basic" :rules="rules" label-width="120px" :model="basic">
                 <el-form-item label="入库类型" prop="classification">
                     <el-select v-model="basic.classification" placeholder="选择入库类型">
-                        <el-option v-for="(item, inx) in classification" :id="inx" :label="item.name" :value="item.id" />
+                        <el-option v-for="(item, inx) in classification" :key="inx" :id="inx" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
                 <el-form-item label="入库仓库" prop="warehouses">
                     <el-select v-model="basic.warehouses" placeholder="选择仓库">
-                        <el-option v-for="(item, inx) in warehouses" :id="inx" :label="item.name" :value="item.id" />
+                        <el-option v-for="(item, inx) in warehouses" :key="inx" :id="inx" :label="item.name" :value="item.id" />
                     </el-select>
                 </el-form-item>
                 <el-form-item label="供应商" prop="supplier">
                     <el-select v-model="basic.supplier" placeholder="选择供应商">
-                        <el-option v-for="(item, inx) in supplier" :id="inx" :label="item.name" :value="item.id">
+                        <el-option v-for="(item, inx) in supplier" :key="inx" :id="inx" :label="item.name" :value="item.id">
                             <span style="float: left">{{ item.name }}（{{ item.person }}）</span>
                         </el-option>
                     </el-select>
@@ -33,7 +33,7 @@
                 <van-nav-bar title="选择物品" left-arrow @click-left="onCloseItem" fixed placeholder right-text="确定" @click-right="onAddItemTolist" />
                 <el-checkbox-group v-model="selectedRows">
                     <van-cell-group inset>
-                        <van-cell v-for="(item, inx) in items" :title="item.name" :label="item.unit">
+                        <van-cell v-for="(item, inx) in items" :key="inx" :title="item.name" :label="item.unit">
                             <div style="width: 100%">
                                 <el-checkbox :value="item" />
                             </div>
@@ -49,7 +49,7 @@
             <!-- 物品选择 -->
 
             <!-- 物品数目 -->
-            <div v-for="(val, inx) in basic.items">
+            <div v-for="(val, inx) in basic.items" :key="inx">
                 <van-swipe-cell>
                     <van-cell :border="false" :title="val.name">
                         <input
@@ -88,7 +88,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
 import { Plus, Refresh } from "@element-plus/icons-vue";
 import { formatTime } from "../../../utils/date.js";
 import { msgcon } from "../../../utils/message.js";
@@ -129,7 +129,7 @@ export default {
             pageTotal: 0,
             pageSize: 10,
             page: 1,
-            items: [] as Item[],
+            items: [],
             basic: {
                 loading: false, // 创建时置为true
                 classification: "", // 选择的类型
@@ -140,7 +140,7 @@ export default {
             data: [],
             classification: [], // 入库类型数据
             warehouses: [], // 仓库数据
-            selectedRows: [] as Item[],
+            selectedRows: [],
             supplier: [], // 供应商
             query: {
                 item: {

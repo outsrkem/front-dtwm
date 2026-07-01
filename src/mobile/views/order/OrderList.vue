@@ -35,7 +35,7 @@ import { withDelay, convertToLimitOffset } from "../../../utils/common.js";
 import { SelectStockOrder } from "../../../api/index.js";
 
 export default {
-    components: { VanEmpty }, // 注册空状态组件
+    components: {},
     data() {
         return {
             orderList: [], // 单据列表数据

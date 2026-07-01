@@ -99,7 +99,6 @@ export default {
             page: 1,
             loading: true,
             items: [],
-            loading: true,
             currentItem: null, // 存储当前编辑的物品数据
             query: { name: "" }, // 物品检索
             columns: [

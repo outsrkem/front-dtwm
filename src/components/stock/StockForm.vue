@@ -208,7 +208,7 @@
     </el-card>
 </template>
 
-<script lang="ts">
+<script>
 import { ElMessageBox } from "element-plus";
 import { Plus, Refresh, Search } from "@element-plus/icons-vue";
 import pagination from "../../components/pagination/pagination.vue";

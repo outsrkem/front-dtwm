@@ -147,7 +147,7 @@
 
                     <div style="margin-right: 20px" v-if="printTheme.signature.enabled">
                         <div style="display: flex; flex-direction: column; align-items: flex-end; width: 100%">
-                            <span v-for="val in printTheme.signature.items">
+                            <span v-for="(val, index) in printTheme.signature.items" :key="index">
                                 <span v-if="val.required">
                                     <p style="padding-top: 35px">{{ val.label }}：______________________</p>
                                 </span>
@@ -162,7 +162,6 @@
 <script>
 import dayjs from "dayjs";
 import { msgcon } from "../../utils/message.js";
-import { formatTime } from "../../utils/date.js";
 import { withDelay } from "../../utils/common.js";
 import { printTheme } from "../../utils/theme.js";
 import { GetWarehouseByID, OrderAggregateCache, GetParticulars, GetPrintTheme } from "../../api/index.js";

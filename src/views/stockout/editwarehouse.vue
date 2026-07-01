@@ -32,7 +32,7 @@
         @update:historySupplement="handleHistorySupplementChange" />
 </template>
 
-<script lang="ts">
+<script>
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { GetOrderDetails, UpdateOrder, GetParticulars, SelectInventory, GetClassification, GetWarehouses, ListSuppliers } from "../../api/index.js";
 import StockForm from "../../components/stock/StockForm.vue";

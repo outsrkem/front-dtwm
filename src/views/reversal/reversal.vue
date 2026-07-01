@@ -75,7 +75,6 @@ import { Refresh, ArrowLeft } from "@element-plus/icons-vue";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { formatTime } from "../../utils/date.js";
 import { GetOrderDetails, GetParticulars } from "../../api/index.js";
-import { getSuatusOption } from "../../utils/status.js";
 import { getStatusConfig } from "../../utils/status.js";
 export default {
     name: "ReversalApplicationlIndex",
@@ -119,7 +118,7 @@ export default {
             this.loadGetParticulars(s, 1);
         },
         // 加载订单流水信息
-        async loadGetParticulars(page_size = 10, page = 1, oid) {
+        async loadGetParticulars(page_size = 10, page = 1) {
             this.loading = true;
             this.error = false;
             this.particularsdata = [];
