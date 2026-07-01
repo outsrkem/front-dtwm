@@ -66,8 +66,8 @@
 <script>
 import { formatTime } from "../../utils/date.js";
 import { msgcon } from "../../utils/message.js";
-import { withDelay, convertToLimitOffset } from "../../utils/common.js";
-import { GetParticulars, CreateReversal, ExamineReversal } from "../../api/index.js";
+import { withDelay } from "../../utils/common.js";
+import { GetParticulars, ExamineReversal } from "../../api/index.js";
 export default {
     name: "DisposeReversal",
     components: {},

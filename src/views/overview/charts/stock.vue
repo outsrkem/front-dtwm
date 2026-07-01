@@ -43,7 +43,7 @@ export default {
                     id: "",
                 },
             },
-            _isDestroyed: false, // 组件销毁标记
+            isDestroyed: false, // 组件销毁标记
             loadingWarehouses: false, // 防止重复请求和提供用户反馈
         };
     },
@@ -57,7 +57,7 @@ export default {
         },
 
         onRefresh() {
-            if (this._isDestroyed) return;
+            if (this.isDestroyed) return;
             this.loadPositiveStock();
         },
 
@@ -82,27 +82,27 @@ export default {
 
             withDelay(() => PositiveStock(params))
                 .then((res) => {
-                    if (this._isDestroyed) return;
+                    if (this.isDestroyed) return;
                     // PositiveStock返回的都是大于0的库存，直接赋值
                     this.stock = res.payload?.items || [];
                     this.updateChart();
                 })
                 .catch((error) => {
                     console.error("获取库存数据失败:", error);
-                    if (!this._isDestroyed) {
+                    if (!this.isDestroyed) {
                         this.stock = [];
                         this.updateChart();
                     }
                 })
                 .finally(() => {
-                    if (!this._isDestroyed) {
+                    if (!this.isDestroyed) {
                         this.loading = false;
                     }
                 });
         },
 
         initChart() {
-            if (this._isDestroyed) return;
+            if (this.isDestroyed) return;
 
             const chartDom = document.getElementById("kcyj");
             if (!chartDom) {
@@ -146,7 +146,7 @@ export default {
 
                 // 监听图表刷选事件
                 this.myChart.on("brushSelected", (params) => {
-                    if (this._isDestroyed) return;
+                    if (this.isDestroyed) return;
 
                     if (!params || !Array.isArray(params.batch) || params.batch.length === 0) {
                         this.myChart.setOption({ title: { text: "" } });
@@ -186,7 +186,7 @@ export default {
         },
 
         updateChart() {
-            if (this._isDestroyed || !this.myChart) {
+            if (this.isDestroyed || !this.myChart) {
                 return;
             }
 
@@ -304,7 +304,7 @@ export default {
         window.addEventListener(
             "resize",
             () => {
-                if (!this._isDestroyed && this.myChart) {
+                if (!this.isDestroyed && this.myChart) {
                     this.myChart.resize();
                 }
             },
@@ -312,7 +312,7 @@ export default {
         );
     },
     created() {
-        this._isDestroyed = false;
+        this.isDestroyed = false;
         this.$globalBus.emit("updateActivePath", "/overview/stock");
         this.onRefresh();
         this.$globalBus.on("onRefresh", () => {
@@ -320,7 +320,7 @@ export default {
         });
     },
     beforeUnmount() {
-        this._isDestroyed = true;
+        this.isDestroyed = true;
         this.$globalBus.off("updateActivePath");
         this.$globalBus.off("onRefresh");
         window.removeEventListener(
@@ -336,8 +336,8 @@ export default {
         }
     },
     watch: {
-        $route(to, from) {
-            if (!this._isDestroyed && this.myChart) {
+        $route() {
+            if (!this.isDestroyed && this.myChart) {
                 this.myChart.resize();
             }
         },

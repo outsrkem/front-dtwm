@@ -1,6 +1,5 @@
 <script>
 import { Resume } from "./api/index.js";
-import { toLoginPage } from "./utils/common.js";
 export default {
     name: "App",
     data() {

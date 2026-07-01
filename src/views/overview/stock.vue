@@ -63,7 +63,7 @@ export default {
                     id: "",
                 },
             },
-            _isDestroyed: false, // 添加组件销毁标记
+            isDestroyed: false, // 添加组件销毁标记
             loadingWarehouses: false, // 防止重复请求和提供用户反馈
         };
     },
@@ -90,7 +90,7 @@ export default {
 
             GetWarehouses(params)
                 .then((res) => {
-                    if (this._isDestroyed) return;
+                    if (this.isDestroyed) return;
                     // 验证响应结构
                     if (res && res.payload && Array.isArray(res.payload.items)) {
                         this.warehouses = res.payload.items;
@@ -101,13 +101,13 @@ export default {
                 })
                 .catch((err) => {
                     console.error("获取仓库信息失败:", err);
-                    if (!this._isDestroyed) {
+                    if (!this.isDestroyed) {
                         this.warehouses = [];
                         this.$message.error("获取仓库列表失败，请稍后重试");
                     }
                 })
                 .finally(() => {
-                    if (!this._isDestroyed) {
+                    if (!this.isDestroyed) {
                         this.loadingWarehouses = false;
                     }
                     this.loading = false;
@@ -123,7 +123,7 @@ export default {
     },
     mounted() {},
     created() {
-        this._isDestroyed = false;
+        this.isDestroyed = false;
         this.$globalBus.emit("updateActivePath", "/overview/stock");
         this.onRefresh();
     },

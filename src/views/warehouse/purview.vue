@@ -204,7 +204,7 @@ export default {
             };
 
             withDelay(() => AddPermission(paths, data))
-                .then((res) => {
+                .then(() => {
                     this.$message.success(msgcon("添加成功"));
                 })
                 .catch((err) => {
@@ -222,7 +222,7 @@ export default {
             };
 
             DeletePermission(paths, data)
-                .then((res) => {
+                .then(() => {
                     this.$message.success(msgcon("移除成功"));
                 })
                 .catch((err) => {

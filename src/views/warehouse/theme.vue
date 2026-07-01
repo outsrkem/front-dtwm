@@ -220,7 +220,7 @@ export default {
                 try {
                     // 关键修复：使用replace确保页面重新加载
                     this.$router.replace(encodedOriginalPath);
-                } catch (err) {
+                } catch {
                     // 降级处理：强制刷新页面
                     window.location.href = this.$router.resolve({
                         path: encodedOriginalPath,

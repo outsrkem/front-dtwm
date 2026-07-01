@@ -132,7 +132,7 @@ export default {
                     this.pageTotal = res.payload.page_info.total;
                     this.loading = false;
                 })
-                .catch((err) => {
+                .catch(() => {
                     this.inventory = [];
                 })
                 .finally(() => {

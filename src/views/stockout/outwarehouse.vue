@@ -33,7 +33,7 @@
         @update:historySupplement="handleHistorySupplementChange" />
 </template>
 
-<script lang="ts">
+<script>
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { SelectInventory, ItemOutWarehouse, GetClassification, GetWarehouses, ListSuppliers } from "../../api/index.js";
 import StockForm from "../../components/stock/StockForm.vue";
@@ -118,7 +118,7 @@ export default {
                 this.loadSelectInventory(this.pageSize, this.page);
             }
         },
-        "basic.items"(newVal) {
+        "basic.items"() {
             if (this.selectItem.dialogVisible) {
                 this.items = [...this.items];
             }

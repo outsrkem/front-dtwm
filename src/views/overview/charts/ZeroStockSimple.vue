@@ -43,7 +43,7 @@ export default {
                     id: "",
                 },
             },
-            _isDestroyed: false, // 组件销毁标记
+            isDestroyed: false, // 组件销毁标记
         };
     },
 
@@ -67,24 +67,24 @@ export default {
 
             withDelay(() => ZeroStock(params))
                 .then((res) => {
-                    if (this._isDestroyed) return;
+                    if (this.isDestroyed) return;
                     this.zeroStock = res.payload?.items || [];
                 })
                 .catch((error) => {
                     console.error("获取零库存数据失败:", error);
-                    if (!this._isDestroyed) {
+                    if (!this.isDestroyed) {
                         this.zeroStock = [];
                     }
                 })
                 .finally(() => {
-                    if (!this._isDestroyed) {
+                    if (!this.isDestroyed) {
                         this.loading = false;
                     }
                 });
         },
     },
     created() {
-        this._isDestroyed = false;
+        this.isDestroyed = false;
         this.$globalBus.emit("updateActivePath", "/overview/zero-stock");
         this.loadZeroStock();
         // 保留全局刷新事件监听
@@ -93,7 +93,7 @@ export default {
         });
     },
     beforeUnmount() {
-        this._isDestroyed = true;
+        this.isDestroyed = true;
         this.$globalBus.off("updateActivePath");
         this.$globalBus.off("onRefresh");
     },

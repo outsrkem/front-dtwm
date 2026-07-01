@@ -177,7 +177,7 @@ export default {
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
         },
-        handleRowStyle(row, index) {
+        handleRowStyle(row) {
             const styles = {};
             if (row.supplement === 1) {
                 styles.backgroundColor = "#e8f5f7"; // 补历史单行，呼吸感浅青色

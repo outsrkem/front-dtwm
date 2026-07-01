@@ -133,7 +133,6 @@ export default {
         return {
             Printer,
             Search,
-            Search,
         };
     },
     data() {

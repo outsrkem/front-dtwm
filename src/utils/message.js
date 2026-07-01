@@ -6,5 +6,5 @@ export function msgcon(msg) {
         duration: 1500,
         grouping: true,
         plain: true,
-    }
+    };
 }

@@ -130,10 +130,8 @@
 <script>
 import MyTable from "../../components/MyTable/MyTable.vue";
 import { Refresh, Search } from "@element-plus/icons-vue";
-import InWarehouse from "./inwarehouse.vue";
 import InStatus from "./status.vue";
 import pagination from "../../components/pagination/pagination.vue";
-import PrintPage from "../printmp/printmp.vue";
 import { formatTime } from "../../utils/date.js";
 import { Getstockorder } from "../../api/index.js";
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
@@ -141,7 +139,7 @@ import { getStatusConfig } from "../../utils/status.js";
 import { getSuatusOption } from "../../utils/status.js";
 export default {
     name: "HomeIndex",
-    components: { pagination, InWarehouse, InStatus, PrintPage, MyTable },
+    components: { pagination, InStatus, MyTable },
     props: {},
     setup() {
         return {
@@ -180,7 +178,7 @@ export default {
         formatDate(time) {
             return formatTime(time).format("YYYY-MM-DD HH:mm:ss");
         },
-        handleRowStyle(row, index) {
+        handleRowStyle(row) {
             const styles = {};
             if (row.supplement === 1) {
                 styles.backgroundColor = "#e8f5f7"; // 补历史单行，呼吸感浅青色

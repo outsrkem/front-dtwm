@@ -33,7 +33,7 @@
         @update:historySupplement="handleHistorySupplementChange" />
 </template>
 
-<script lang="ts">
+<script>
 import { withDelay, convertToLimitOffset } from "../../utils/common.js";
 import { GetItems, InStock, GetClassification, GetWarehouses, ListSuppliers } from "../../api/index.js";
 import StockForm from "../../components/stock/StockForm.vue";
@@ -107,7 +107,7 @@ export default {
     },
     watch: {
         // 监听已选物品变化，刷新选择窗口
-        "basic.items"(newVal) {
+        "basic.items"() {
             if (this.selectItem.dialogVisible) {
                 // 刷新物品列表以更新选择状态
                 this.loadGetItems(this.pageSize, this.page);
