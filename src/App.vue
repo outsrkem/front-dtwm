@@ -1,5 +1,6 @@
 <script>
 import { Resume } from "./api/index.js";
+
 export default {
     name: "App",
     data() {
@@ -16,8 +17,7 @@ export default {
     methods: {
         // 加载简历数据的方法
         async loadResume() {
-            // 注意这里需要返回接口调用结果，否则无法获取res
-            return await Resume();
+            return Resume();
         },
         // 页面可见性变化的处理逻辑
         async handleVisibilityChange() {

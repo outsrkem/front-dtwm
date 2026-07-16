@@ -90,27 +90,6 @@ const routes = [
         component: NotFound,
     },
 ];
-// const routes = [
-//     {
-//         path: "/",
-//         component: Layout,
-//         meta: { title: "DTWM" },
-//         children: [
-//             { meta: { title: "首页" }, path: "/", name: "home", component: Overview },
-//             { meta: { title: "数据统计" }, path: "/overview", name: "overview", component: Overview },
-//             { meta: { title: "库存信息" }, path: "/inventory", name: "inventory", component: Inventory },
-//             { meta: { title: "出库管理" }, path: "/stockout", name: "stockout", component: Stockout },
-//             { meta: { title: "出库管理 - 出库申请" }, path: "/stockin/delivery", name: "outWarehouse", component: OutWarehouse },
-//             { meta: { title: "入库管理" }, path: "/stockin", name: "stockin", component: Stockin },
-//             { meta: { title: "入库管理 - 入库申请" }, path: "/stockin/create", name: "inWarehouse", component: InWarehouse },
-//             { meta: { title: "出入库明细" }, path: "/particulars", name: "particulars", component: Particulars },
-//             { meta: { title: "仓库信息" }, path: "/warehouse", name: "warehouse", component: Warehouse },
-//             { meta: { title: "物品管理" }, path: "/items", name: "items", component: Items },
-//             { meta: { title: "客户管理" }, path: "/supplier", name: "supplier", component: Supplier },
-//         ],
-//     },
-//     { meta: { title: "404 页面未找到" }, path: "/:pathMatch(.*)*", component: NotFound },
-// ];
 
 const router = createRouter({
     history: createWebHashHistory("/dtwm/"),
