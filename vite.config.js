@@ -35,6 +35,17 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true,
                     secure: false,
                 },
+                "/dtwm/atlas": {
+                    target: API_Endpoint,
+                    changeOrigin: true,
+                    secure: false,
+                    rewrite: (path) => path.replace(/^\/dtwm/, ""),
+                },
+                "/atlas": {
+                    target: API_Endpoint,
+                    changeOrigin: true,
+                    secure: false,
+                },
             },
         },
         build: {
