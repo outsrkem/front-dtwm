@@ -1,33 +1,32 @@
 <script>
+import zhCn from "element-plus/es/locale/lang/zh-cn";
 import { Resume } from "./api/index.js";
 
 export default {
     name: "App",
     data() {
-        return { data: "" };
+        return {
+            zhCn,
+        };
     },
     mounted() {
-        // 注册可见性变化事件监听
+        this.loadResume();
         document.addEventListener("visibilitychange", this.handleVisibilityChange);
     },
     beforeUnmount() {
-        // 移除事件监听，防止内存泄漏
         document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     },
     methods: {
-        // 加载简历数据的方法
         async loadResume() {
-            return Resume();
+            try {
+                await Resume();
+            } catch (error) {
+                console.error("登录状态检测失败", error);
+            }
         },
-        // 页面可见性变化的处理逻辑
         async handleVisibilityChange() {
-            // 仅当页面切回前台（可见状态）时，调用检测接口
             if (document.visibilityState === "visible") {
-                try {
-                    await this.loadResume();
-                } catch (error) {
-                    console.error("登录状态检测失败", error);
-                }
+                await this.loadResume();
             }
         },
     },
@@ -35,9 +34,9 @@ export default {
 </script>
 
 <template>
-    <div>
-        <router-view />
-    </div>
+    <el-config-provider :locale="zhCn">
+        <div>
+            <router-view />
+        </div>
+    </el-config-provider>
 </template>
-
-<style scoped></style>

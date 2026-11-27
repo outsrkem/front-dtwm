@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog v-model="dialogVisible" width="1000" @close="closeDialog">
+        <el-dialog :close-on-click-modal="false" v-model="dialogVisible" width="1000" @close="closeDialog">
             <template #header="{ titleId }">
                 <span :id="titleId" style="color: red">新建红字冲销单</span>
             </template>

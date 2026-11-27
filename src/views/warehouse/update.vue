@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog v-model="dialogVisible" title="更新仓库信息" width="600">
+        <el-dialog :close-on-click-modal="false" v-model="dialogVisible" title="更新仓库信息" width="600">
             <div v-loading="loading">
                 <el-form :model="warehouse" label-width="auto" :rules="fromRules" ref="rules-from">
                     <el-form-item label="仓库名称" prop="name">

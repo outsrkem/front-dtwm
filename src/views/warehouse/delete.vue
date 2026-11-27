@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog v-model="dialogVisible" title="是否删除下列仓库" width="850px">
+        <el-dialog :close-on-click-modal="false" v-model="dialogVisible" title="是否删除下列仓库" width="850px">
             <div style="margin-left: 20px; margin-right: 20px">
                 <el-table :data="vdata" style="width: 100%">
                     <el-table-column prop="name" label="仓库名称" show-overflow-tooltip />

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog v-model="dialogVisible" title="创建仓库" width="600">
+        <el-dialog :close-on-click-modal="false" v-model="dialogVisible" title="创建仓库" width="600">
             <el-form :model="data" label-width="auto" :rules="fromRules" ref="rules-from">
                 <el-form-item label="仓库名称" prop="name">
                     <el-input v-model="data.name" />

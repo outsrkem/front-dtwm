@@ -1,5 +1,5 @@
 <template>
-    <el-dialog v-model="dialogVisible" width="1200" title="处理订单">
+    <el-dialog :close-on-click-modal="false" v-model="dialogVisible" width="1200" title="处理订单">
         <div v-if="!loading">
             <!-- 步骤流程区域 -->
             <el-steps :active="currentStep" finish-status="success" align-center style="margin-bottom: 30px">

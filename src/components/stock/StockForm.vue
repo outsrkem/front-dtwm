@@ -157,7 +157,7 @@
         </div>
 
         <!-- 选择物品弹窗 -->
-        <el-dialog v-model="localSelectItem.dialogVisible" width="1200" :title="labels.selectItemTitle" :draggable="isDesktop">
+        <el-dialog :close-on-click-modal="false" v-model="localSelectItem.dialogVisible" width="1200" :title="labels.selectItemTitle" :draggable="isDesktop">
             <div>
                 <el-space>
                     <el-input style="width: 340px" v-model="localQuery.item.name" :placeholder="labels.searchPlaceholder" clearable @change="$emit('search')">

@@ -1,6 +1,6 @@
 <template>
     <div class="settings-container">
-        <el-dialog v-model="dialogVisible" title="权限管理">
+        <el-dialog :close-on-click-modal="false" v-model="dialogVisible" title="权限管理">
             <div v-loading="loading">
                 <div class="warning-desc">
                     <p>

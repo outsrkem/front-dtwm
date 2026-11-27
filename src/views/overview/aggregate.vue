@@ -78,7 +78,7 @@
         </el-card>
 
         <!-- 单据选择对话框 -->
-        <el-dialog v-model="dialogSelectOrder" title="选择单据" width="1200px" :before-close="handleClose">
+        <el-dialog :close-on-click-modal="false" v-model="dialogSelectOrder" title="选择单据" width="1200px" :before-close="handleClose">
             <div>
                 <el-table :data="orders" style="width: 100%" v-loading="loading" @selection-change="handleSelectionChange" ref="orderTable">
                     <el-table-column type="selection" width="55" />
